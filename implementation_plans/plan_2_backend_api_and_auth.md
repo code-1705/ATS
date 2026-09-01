@@ -1,7 +1,7 @@
 ﻿# Implementation Plan - Submodule 2: FastAPI Backend Core, REST APIs & Admin Auth
 
 ## Overview
-This submodule implements the high-performance FastAPI server providing public endpoints for candidate job applications, secure admin authentication (`admin@enter.in`), complete Job CRUD management, candidate query filtering by job and stage, stage state machine progression, and secure resume streaming directly via Supabase PostgreSQL and Supabase Storage (zero SQLAlchemy).
+This submodule implements the high-performance FastAPI server providing dual candidate application workflows (generic open-link with job dropdown & targeted single-job application endpoint), secure admin authentication (`admin@enter.in`), complete Job CRUD management, candidate query filtering by job and stage, stage state machine progression, and secure resume streaming directly via Supabase PostgreSQL and Supabase Storage (zero SQLAlchemy).
 
 ---
 
@@ -26,7 +26,7 @@ backend/
 ├── routers/
 │   ├── __init__.py
 │   ├── auth.py                # Admin login & current user profile (/api/auth)
-│   ├── public.py              # Public job listings & application submission (/api)
+│   ├── public.py              # Public job listings, direct job apply & general application (/api)
 │   └── admin.py               # Protected Job CRUD & Candidate pipeline endpoints (/api/admin)
 ├── services/
 │   ├── __init__.py
@@ -42,24 +42,41 @@ backend/
 
 ## 2. REST API Endpoints Specification
 
-### A. Public Candidate Endpoints (No Auth Required)
+### A. Public Candidate Application Endpoints (No Auth Required)
+
+#### 1. Open Job Listings (Browse & Choose Flow)
 - `GET /api/jobs`:
-  - Queries `supabase.table("jobs").select("*").eq("is_active", True)`.
-  - Returns active jobs for candidate dropdown and job board.
+  - Returns list of all active open jobs (`is_active == TRUE`) with `id`, `title`, `department`, `location`, `job_type`, and `description`.
+  - Powers both the general candidate dropdown and recruiter/public open-roles view.
 - `GET /api/jobs/{job_id}`:
-  - Fetches specific job description & specifications.
-- `POST /api/applications`:
-  - Accepts `multipart/form-data`:
-    - `job_id`: UUID string (required)
-    - `candidate_name`: str (required)
-    - `candidate_phone`: str (required)
-    - `candidate_email`: EmailStr (required)
-    - `brief_note`: str (optional, default "")
-    - `resume`: UploadFile (required, PDF / DOC / DOCX, max 10MB)
-  - Validates file MIME type, extension, and file size.
-  - Stores file in Supabase Storage (`resumes/`) or local static storage fallback.
-  - Inserts application into `public.applications` table with stage `APPLIED`.
-  - Returns `201 Created` with application ID and confirmation receipt.
+  - Fetches specific job description, qualifications, and department.
+
+#### 2. Endpoint 1: General Application Endpoint (`POST /api/applications`)
+- **Use Case**: Candidate lands on open application portal, chooses any job from the dropdown, and submits application.
+- Accepts `multipart/form-data`:
+  - `job_id`: UUID string (selected from dropdown, required)
+  - `candidate_name`: str (required)
+  - `candidate_phone`: str (required)
+  - `candidate_email`: EmailStr (required)
+  - `brief_note`: str (optional, default "")
+  - `resume`: UploadFile (required, PDF / DOC / DOCX, max 10MB)
+- Validates that `job_id` exists and is active.
+- Stores resume securely in Supabase Storage (`resumes/`).
+- Inserts candidate record with initial stage `APPLIED`.
+- Returns `201 Created` with application ID and receipt.
+
+#### 3. Endpoint 2: Targeted Specific-Job Application Endpoint (`POST /api/jobs/{job_id}/apply`)
+- **Use Case**: Candidate visits a dedicated single-job posting link (e.g. `/jobs/:job_id/apply` or via shared role URL) and applies directly to that specific position.
+- Accepts `multipart/form-data`:
+  - `candidate_name`: str (required)
+  - `candidate_phone`: str (required)
+  - `candidate_email`: EmailStr (required)
+  - `brief_note`: str (optional, default "")
+  - `resume`: UploadFile (required, PDF / DOC / DOCX, max 10MB)
+- Automatically binds `job_id` from URL path parameter.
+- Validates job status, uploads resume, creates application, and returns `201 Created`.
+
+---
 
 ### B. Admin Authentication (`/api/auth`)
 - `POST /api/auth/login`:
@@ -69,6 +86,8 @@ backend/
   - Returns signed JWT token: `{"access_token": "...", "token_type": "bearer", "user": {...}}`.
 - `GET /api/auth/me`:
   - Validates Bearer JWT header and returns active admin profile.
+
+---
 
 ### C. Protected Admin Endpoints (`/api/admin/*` - Bearer Auth Required)
 - `GET /api/admin/jobs`:
@@ -108,4 +127,8 @@ backend/
 - Author test suites with `httpx.AsyncClient` covering:
   1. `test_auth.py`: Login with `admin@enter.in`, invalid password rejection, JWT expiration, and `/api/auth/me` verification.
   2. `test_jobs.py`: Public active jobs retrieval, Admin Job CRUD cycle.
-  3. `test_applications.py`: Public application submission with file upload, candidate filtering by job & stage, stage FSM transitions, and resume streaming.
+  3. `test_applications.py`: 
+     - Direct specific job apply via `POST /api/jobs/{job_id}/apply`.
+     - General dropdown apply via `POST /api/applications`.
+     - Filtering applications by job and stage.
+     - Stage transition updates and invalid stage rejection.
