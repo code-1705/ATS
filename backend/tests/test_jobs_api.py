@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from backend.app import app
@@ -53,3 +53,18 @@ def test_admin_create_job():
         assert res.status_code == 201
         data = res.json()
         assert data["title"] == "Senior Full-Stack Engineer"
+
+def test_admin_list_jobs_with_app_count():
+    mock_supabase = MagicMock()
+    mock_exec = MagicMock()
+    mock_job_with_apps = dict(MOCK_JOB, applications=[{"count": 5}])
+    mock_exec.data = [mock_job_with_apps]
+    mock_supabase.table.return_value.select.return_value.order.return_value.execute.return_value = mock_exec
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.get("/api/admin/jobs", headers=auth_headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["total"] == 1
+        assert data["jobs"][0]["applications_count"] == 5
+
