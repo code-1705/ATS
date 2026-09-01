@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
 from typing import List, Optional
 from backend.core.supabase_client import get_supabase_client
 from backend.services.storage import save_resume_file
@@ -77,6 +77,15 @@ async def submit_general_application(
     if not job.get("is_active", True):
         raise HTTPException(status_code=400, detail="This job is no longer accepting new applications.")
 
+    # Check for existing duplicate application for this job and email
+    normalized_email = candidate_email.strip().lower()
+    existing_app_res = supabase.table("applications").select("id").eq("job_id", job_id).eq("candidate_email", normalized_email).execute()
+    if existing_app_res.data and len(existing_app_res.data) > 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You have already submitted an application for this position."
+        )
+
     # Validate and save resume file
     saved_file = await save_resume_file(resume)
 
@@ -84,8 +93,9 @@ async def submit_general_application(
     app_payload = {
         "job_id": job_id,
         "candidate_name": candidate_name.strip(),
-        "candidate_email": candidate_email.strip().lower(),
+        "candidate_email": normalized_email,
         "candidate_phone": candidate_phone.strip(),
+
         "resume_url": saved_file["resume_url"],
         "resume_filename": saved_file["original_filename"],
         "resume_file_size": saved_file["file_size"],
