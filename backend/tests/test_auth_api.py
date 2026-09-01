@@ -6,12 +6,16 @@ from backend.core.security import get_password_hash, create_access_token
 
 client = TestClient(app)
 
-def test_root_endpoint():
-    response = client.get("/")
+def test_api_health_endpoint():
+    response = client.get("/api/health")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
     assert "public_jobs" in data["endpoints"]
+
+def test_root_endpoint_returns_200():
+    response = client.get("/")
+    assert response.status_code == 200
 
 def test_login_success():
     mock_user = {
