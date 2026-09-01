@@ -84,4 +84,28 @@ def test_admin_update_job_with_is_active_false():
         assert res.status_code == 200
         assert res.json()["is_active"] is False
 
+def test_public_get_active_job_details():
+    mock_supabase = MagicMock()
+    mock_exec = MagicMock()
+    mock_exec.data = [MOCK_JOB]
+    mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value = mock_exec
+
+    with patch("backend.routers.public.get_supabase_client", return_value=mock_supabase):
+        res = client.get(f"/api/jobs/{MOCK_JOB['id']}")
+        assert res.status_code == 200
+        assert res.json()["id"] == MOCK_JOB["id"]
+        assert res.json()["is_active"] is True
+
+def test_public_get_inactive_job_details_returns_404():
+    mock_supabase = MagicMock()
+    mock_exec = MagicMock()
+    mock_exec.data = []  # No active job found
+    mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value = mock_exec
+
+    with patch("backend.routers.public.get_supabase_client", return_value=mock_supabase):
+        res = client.get(f"/api/jobs/{MOCK_JOB['id']}")
+        assert res.status_code == 404
+        assert "no longer active" in res.json()["detail"]
+
+
 

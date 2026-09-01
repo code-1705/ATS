@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { JobDetailsCard } from '../components/JobDetailsCard';
@@ -37,13 +37,19 @@ export const DirectJobApplyPage: React.FC = () => {
     setLoadingJob(true);
     try {
       const data = await getJobDetails(id);
-      setJob(data);
+      if (!data.is_active) {
+        setErrorMessage('This job position is archived and is no longer accepting applications.');
+        setJob(null);
+      } else {
+        setJob(data);
+      }
     } catch (err: any) {
       setErrorMessage(err.response?.data?.detail || 'Job position not found or no longer active.');
     } finally {
       setLoadingJob(false);
     }
   };
+
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
