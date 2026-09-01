@@ -1,4 +1,4 @@
-﻿from datetime import timedelta
+from datetime import timedelta
 from backend.core.config import settings
 from backend.core.security import (
     get_password_hash,
@@ -11,6 +11,8 @@ def test_settings_defaults():
     assert settings.PROJECT_NAME == "EnterRecruit API"
     assert settings.ADMIN_DEFAULT_EMAIL == "admin@enter.in"
     assert settings.ACCESS_TOKEN_EXPIRE_MINUTES >= 60
+    assert len(settings.JWT_SECRET_KEY) >= 32
+
 
 def test_password_hashing_and_verification():
     raw_password = "adminpassword123"
