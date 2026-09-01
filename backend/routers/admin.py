@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 from fastapi.responses import FileResponse
 from typing import List, Optional
@@ -18,7 +19,9 @@ from backend.models.stages import (
     is_valid_stage_transition
 )
 
+logger = logging.getLogger("enterrecruit.admin")
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard & Management"], dependencies=[Depends(get_current_admin)])
+
 
 # ====================================================================
 # Job Management Endpoints (CRUD)
@@ -275,7 +278,13 @@ async def update_candidate_stage(
         "to_stage": target_stage,
         "changed_by": admin.get("sub", "admin@enter.in")
     }
-    supabase.table("application_audit_logs").insert(audit_entry).execute()
+    try:
+        audit_res = supabase.table("application_audit_logs").insert(audit_entry).execute()
+        if not audit_res.data or len(audit_res.data) == 0:
+            logger.warning(f"Audit log insert returned empty data for application {application_id}")
+    except Exception as e:
+        logger.error(f"Failed to record stage audit log for application {application_id}: {str(e)}")
+
 
     updated = update_res.data[0]
     job_info = current_app.get("jobs") or {}

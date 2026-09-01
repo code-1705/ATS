@@ -109,6 +109,30 @@ def test_admin_update_application_stage_valid():
         assert res.status_code == 200
         assert res.json()["stage"] == "R1"
 
+def test_admin_update_application_stage_with_audit_log_error():
+    mock_supabase = MagicMock()
+    mock_fetch_exec = MagicMock()
+    mock_fetch_exec.data = [MOCK_APP]
+    mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_fetch_exec
+
+    updated_app = dict(MOCK_APP, stage="R1")
+    mock_update_exec = MagicMock()
+    mock_update_exec.data = [updated_app]
+    mock_supabase.table.return_value.update.return_value.eq.return_value.execute.return_value = mock_update_exec
+
+    # Mock insert raising exception to test resilient logging
+    mock_supabase.table.return_value.insert.return_value.execute.side_effect = Exception("DB constraint error")
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.patch(
+            "/api/admin/applications/33333333-3333-3333-3333-333333333333/stage",
+            json={"stage": "R1"},
+            headers=auth_headers
+        )
+        assert res.status_code == 200
+        assert res.json()["stage"] == "R1"
+
+
 def test_unauthenticated_resume_access_is_rejected():
     res = client.get("/api/admin/applications/33333333-3333-3333-3333-333333333333/resume")
     assert res.status_code == 401
