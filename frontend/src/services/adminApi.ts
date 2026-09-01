@@ -79,9 +79,10 @@ export const createAdminJob = async (payload: JobCreatePayload): Promise<Job> =>
 };
 
 export const updateAdminJob = async (jobId: string, payload: JobUpdatePayload): Promise<Job> => {
-  const response = await adminClient.put<Job>(`/admin/jobs/${jobId}`, payload);
+  const response = await adminClient.patch<Job>(`/admin/jobs/${jobId}`, payload);
   return response.data;
 };
+
 
 export const deleteAdminJob = async (jobId: string): Promise<void> => {
   await adminClient.delete(`/admin/jobs/${jobId}`);

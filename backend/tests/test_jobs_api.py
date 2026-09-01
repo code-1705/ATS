@@ -76,13 +76,14 @@ def test_admin_update_job_with_is_active_false():
     mock_supabase.table.return_value.update.return_value.eq.return_value.execute.return_value = mock_exec
 
     with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
-        res = client.put(
+        res = client.patch(
             f"/api/admin/jobs/{MOCK_JOB['id']}",
             json={"is_active": False},
             headers=auth_headers
         )
         assert res.status_code == 200
         assert res.json()["is_active"] is False
+
 
 def test_public_get_active_job_details():
     mock_supabase = MagicMock()
