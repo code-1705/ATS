@@ -68,6 +68,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
   const [selectedJobFilter, setSelectedJobFilter] = useState<string>('ALL');
   const [selectedStageFilter, setSelectedStageFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
 
   // Modals & Drawers State
   const [inspectApplicationId, setInspectApplicationId] = useState<string | null>(null);
@@ -75,20 +76,28 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [deletingJob, setDeletingJob] = useState<Job | null>(null);
 
+  // Debounce search query changes by 400ms
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   useEffect(() => {
     loadDashboardData();
   }, []);
 
   useEffect(() => {
     loadApplications();
-  }, [selectedJobFilter, selectedStageFilter, searchQuery]);
+  }, [selectedJobFilter, selectedStageFilter, debouncedSearchQuery]);
 
   useEffect(() => {
     loadStats();
   }, [selectedJobFilter]);
 
   const loadDashboardData = async () => {
-    await Promise.all([loadJobs(), loadApplications(), loadStats()]);
+    await Promise.all([loadJobs(), loadStats()]);
   };
 
   const loadStats = async () => {
@@ -118,7 +127,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
       const params: any = {};
       if (selectedJobFilter !== 'ALL') params.job_id = selectedJobFilter;
       if (selectedStageFilter !== 'ALL') params.stage = selectedStageFilter;
-      if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (debouncedSearchQuery.trim()) params.search = debouncedSearchQuery.trim();
 
       const data = await getAdminApplications(params);
       setApplications(data);
@@ -128,6 +137,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
       setLoadingApps(false);
     }
   };
+
 
   // Stage Update Handler
   const handleStageChange = async (appId: string, newStage: ApplicationStage) => {

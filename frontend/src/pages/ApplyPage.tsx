@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { JobSelectorDropdown } from '../components/JobSelectorDropdown';
@@ -155,11 +155,15 @@ export const ApplyPage: React.FC = () => {
                     jobs={jobs}
                     selectedJobId={selectedJobId}
                     onSelectJob={(id) => {
-                      setSelectedJobId(id);
+                      if (id !== selectedJobId) {
+                        setSelectedJobId(id);
+                        handleResetForm();
+                      }
                       setErrors((prev) => ({ ...prev, job_id: '' }));
                     }}
                     error={errors.job_id}
                   />
+
 
                   {selectedJob && <JobDetailsCard job={selectedJob} />}
                 </div>
