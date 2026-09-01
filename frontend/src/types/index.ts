@@ -1,4 +1,4 @@
-﻿export type ApplicationStage =
+export type ApplicationStage =
   | 'APPLIED'
   | 'REJECT'
   | 'R1'
@@ -65,7 +65,9 @@ export interface ApplicationResponse {
   stage_label?: string;
   stage_updated_at?: string;
   created_at?: string;
+  valid_next_stages?: ApplicationStage[];
 }
+
 
 export interface AuditLog {
   id: number;

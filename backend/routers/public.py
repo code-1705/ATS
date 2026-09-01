@@ -4,7 +4,8 @@ from backend.core.supabase_client import get_supabase_client
 from backend.services.storage import save_resume_file
 from backend.schemas.job import JobResponse
 from backend.schemas.application import ApplicationResponse
-from backend.models.stages import ApplicationStage, STAGE_LABELS
+from backend.models.stages import ApplicationStage, STAGE_LABELS, get_valid_next_stages
+
 
 router = APIRouter(tags=["Public Candidate Application"])
 
@@ -124,8 +125,10 @@ async def submit_general_application(
         stage=created_app["stage"],
         stage_label=STAGE_LABELS.get(ApplicationStage(created_app["stage"]), "Applied (Initial)"),
         stage_updated_at=str(created_app.get("stage_updated_at", "")),
-        created_at=str(created_app.get("created_at", ""))
+        created_at=str(created_app.get("created_at", "")),
+        valid_next_stages=get_valid_next_stages(created_app["stage"])
     )
+
 
 @router.post("/jobs/{job_id}/apply", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
 async def submit_targeted_job_application(

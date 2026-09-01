@@ -1,9 +1,10 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import type { ApplicationStage } from '../types';
 import { ChevronDown, Loader2 } from 'lucide-react';
 
 interface StageBadgeProps {
   currentStage: string;
+  validNextStages?: (ApplicationStage | string)[];
   onStageChange?: (newStage: ApplicationStage) => Promise<void>;
   interactive?: boolean;
 }
@@ -91,6 +92,7 @@ const ALL_STAGES: ApplicationStage[] = [
 
 export const StageBadge: React.FC<StageBadgeProps> = ({
   currentStage,
+  validNextStages,
   onStageChange,
   interactive = true
 }) => {
@@ -102,6 +104,15 @@ export const StageBadge: React.FC<StageBadgeProps> = ({
     border: 'border-slate-300',
     dot: 'bg-slate-400'
   };
+
+  const availableStages: ApplicationStage[] = validNextStages
+    ? [
+        currentStage as ApplicationStage,
+        ...validNextStages.filter((s) => s !== currentStage) as ApplicationStage[]
+      ]
+    : ALL_STAGES;
+
+  const isTerminal = validNextStages !== undefined && validNextStages.length === 0;
 
   const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStage = e.target.value as ApplicationStage;
@@ -115,7 +126,7 @@ export const StageBadge: React.FC<StageBadgeProps> = ({
     }
   };
 
-  if (!interactive || !onStageChange) {
+  if (!interactive || !onStageChange || isTerminal) {
     return (
       <span
         className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${config.bg} ${config.text} ${config.border}`}
@@ -146,7 +157,7 @@ export const StageBadge: React.FC<StageBadgeProps> = ({
         onChange={handleChange}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
       >
-        {ALL_STAGES.map((stg) => (
+        {availableStages.map((stg) => (
           <option key={stg} value={stg}>
             {STAGE_CONFIGS[stg]?.label || stg}
           </option>
@@ -155,3 +166,4 @@ export const StageBadge: React.FC<StageBadgeProps> = ({
     </div>
   );
 };
+
