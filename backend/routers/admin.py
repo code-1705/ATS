@@ -99,9 +99,10 @@ async def update_job(job_id: str, payload: JobUpdate):
     Updates an existing job posting.
     """
     supabase = get_supabase_client()
-    update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
+    update_data = payload.model_dump(exclude_unset=True)
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields provided to update.")
+
 
     res = supabase.table("jobs").update(update_data).eq("id", job_id).execute()
     if not res.data or len(res.data) == 0:
