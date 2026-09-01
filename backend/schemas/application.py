@@ -48,3 +48,10 @@ class AuditLogResponse(BaseModel):
 
 class ApplicationDetailResponse(ApplicationResponse):
     audit_logs: List[AuditLogResponse] = []
+
+class DashboardStatsResponse(BaseModel):
+    total_candidates: int
+    in_review: int
+    approved: int
+    rejected: int
+

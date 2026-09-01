@@ -7,8 +7,10 @@ import type {
   ApplicationDetailResponse,
   TokenResponse,
   AdminUser,
-  ApplicationStage
+  ApplicationStage,
+  DashboardStats
 } from '../types';
+
 
 const TOKEN_KEY = 'enterrecruit_token';
 
@@ -121,3 +123,10 @@ export const updateApplicationStage = async (
   );
   return response.data;
 };
+
+export const getDashboardStats = async (jobId?: string): Promise<DashboardStats> => {
+  const params = jobId && jobId !== 'ALL' ? { job_id: jobId } : undefined;
+  const response = await adminClient.get<DashboardStats>('/admin/stats', { params });
+  return response.data;
+};
+

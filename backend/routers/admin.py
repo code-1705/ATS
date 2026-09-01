@@ -13,8 +13,10 @@ from backend.schemas.application import (
     ApplicationListResponse,
     ApplicationDetailResponse,
     StageUpdateRequest,
-    AuditLogResponse
+    AuditLogResponse,
+    DashboardStatsResponse
 )
+
 from backend.models.stages import (
     ApplicationStage,
     STAGE_LABELS,
@@ -361,3 +363,32 @@ async def preview_or_download_resume(
             )
 
     return {"resume_url": resume_url, "filename": filename}
+
+
+@router.get("/stats", response_model=DashboardStatsResponse)
+async def get_dashboard_stats(
+    job_id: Optional[str] = Query(None, description="Optional Job ID filter for stats")
+):
+    """
+    Returns global dashboard summary metrics (Total, In Review, Approved, Rejected).
+    """
+    supabase = get_supabase_client()
+    query = supabase.table("applications").select("stage")
+    if job_id and job_id.upper() != "ALL":
+        query = query.eq("job_id", job_id)
+
+    res = query.execute()
+    data = res.data or []
+
+    total = len(data)
+    approved = sum(1 for a in data if a.get("stage") == "APPROVED")
+    rejected = sum(1 for a in data if "REJECT" in (a.get("stage") or ""))
+    in_review = sum(1 for a in data if a.get("stage") in {"APPLIED", "R1", "R2", "R3"})
+
+    return DashboardStatsResponse(
+        total_candidates=total,
+        in_review=in_review,
+        approved=approved,
+        rejected=rejected
+    )
+

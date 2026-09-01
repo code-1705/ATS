@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminNavbar } from '../components/AdminNavbar';
 import { CandidateTable } from '../components/CandidateTable';
 import { CandidateDetailDrawer } from '../components/CandidateDetailDrawer';
@@ -8,6 +8,7 @@ import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import {
   getAdminJobs,
   getAdminApplications,
+  getDashboardStats,
   createAdminJob,
   updateAdminJob,
   deleteAdminJob,
@@ -19,7 +20,8 @@ import type {
   AdminUser,
   ApplicationStage,
   JobCreatePayload,
-  JobUpdatePayload
+  JobUpdatePayload,
+  DashboardStats
 } from '../types';
 import {
   Users,
@@ -53,6 +55,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
   // Data State
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    total_candidates: 0,
+    in_review: 0,
+    approved: 0,
+    rejected: 0
+  });
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [loadingApps, setLoadingApps] = useState(true);
 
@@ -75,8 +83,21 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
     loadApplications();
   }, [selectedJobFilter, selectedStageFilter, searchQuery]);
 
+  useEffect(() => {
+    loadStats();
+  }, [selectedJobFilter]);
+
   const loadDashboardData = async () => {
-    await Promise.all([loadJobs(), loadApplications()]);
+    await Promise.all([loadJobs(), loadApplications(), loadStats()]);
+  };
+
+  const loadStats = async () => {
+    try {
+      const data = await getDashboardStats(selectedJobFilter !== 'ALL' ? selectedJobFilter : undefined);
+      setStats(data);
+    } catch (err) {
+      console.error('Failed to load dashboard stats:', err);
+    }
   };
 
   const loadJobs = async () => {
@@ -112,7 +133,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
   const handleStageChange = async (appId: string, newStage: ApplicationStage) => {
     try {
       await updateApplicationStage(appId, newStage);
-      await loadApplications();
+      await Promise.all([loadApplications(), loadStats()]);
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to update candidate stage.');
     }
@@ -140,19 +161,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
   const handleDeleteJobConfirm = async (jobId: string) => {
     try {
       await deleteAdminJob(jobId);
-      await loadJobs();
+      await Promise.all([loadJobs(), loadStats()]);
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to delete job.');
     }
   };
-
-  // Summary Metrics Calculations
-  const totalAppsCount = applications.length;
-  const approvedCount = applications.filter((a) => a.stage === 'APPROVED').length;
-  const rejectedCount = applications.filter((a) => a.stage.includes('REJECT')).length;
-  const inProgressCount = applications.filter(
-    (a) => a.stage === 'APPLIED' || a.stage === 'R1' || a.stage === 'R2' || a.stage === 'R3'
-  ).length;
 
   return (
     <div className="min-h-screen bg-slate-100/70 flex flex-col">
@@ -160,7 +173,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
         activeTab={activeTab}
         onTabChange={setActiveTab}
         user={user}
-        candidateCount={applications.length}
+        candidateCount={stats.total_candidates}
         jobCount={jobs.length}
       />
 
@@ -170,7 +183,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Candidates</span>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-extrabold text-slate-900">{totalAppsCount}</span>
+              <span className="text-2xl font-extrabold text-slate-900">{stats.total_candidates}</span>
               <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                 <Users className="w-4 h-4" />
               </div>
@@ -180,7 +193,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">In Active Review</span>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-extrabold text-blue-600">{inProgressCount}</span>
+              <span className="text-2xl font-extrabold text-blue-600">{stats.in_review}</span>
               <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                 <Clock className="w-4 h-4" />
               </div>
@@ -190,7 +203,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Approved / Hired</span>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-extrabold text-emerald-600">{approvedCount}</span>
+              <span className="text-2xl font-extrabold text-emerald-600">{stats.approved}</span>
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
@@ -200,13 +213,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Rejected</span>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-extrabold text-rose-600">{rejectedCount}</span>
+              <span className="text-2xl font-extrabold text-rose-600">{stats.rejected}</span>
               <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
                 <XCircle className="w-4 h-4" />
               </div>
             </div>
           </div>
         </div>
+
 
         {/* Tab 1: Candidate Applications Pipeline */}
         {activeTab === 'candidates' && (

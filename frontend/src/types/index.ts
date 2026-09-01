@@ -94,3 +94,11 @@ export interface TokenResponse {
   token_type: string;
   user: AdminUser;
 }
+
+export interface DashboardStats {
+  total_candidates: number;
+  in_review: number;
+  approved: number;
+  rejected: number;
+}
+

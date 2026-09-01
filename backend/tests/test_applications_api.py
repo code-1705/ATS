@@ -215,4 +215,26 @@ def test_admin_list_applications_with_search():
         assert data["total"] == 1
         assert data["applications"][0]["candidate_name"] == "Jane Doe"
 
+def test_admin_get_dashboard_stats():
+    mock_supabase = MagicMock()
+    mock_exec = MagicMock()
+    mock_exec.data = [
+        {"stage": "APPLIED"},
+        {"stage": "R1"},
+        {"stage": "APPROVED"},
+        {"stage": "R2_REJECT"},
+        {"stage": "REJECT"},
+    ]
+    mock_supabase.table.return_value.select.return_value.execute.return_value = mock_exec
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.get("/api/admin/stats", headers=auth_headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["total_candidates"] == 5
+        assert data["in_review"] == 2
+        assert data["approved"] == 1
+        assert data["rejected"] == 2
+
+
 
