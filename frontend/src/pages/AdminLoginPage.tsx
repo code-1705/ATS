@@ -1,11 +1,11 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ShieldCheck, Mail, Lock, AlertCircle, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { loginAdmin } from '../services/adminApi';
 
 export const AdminLoginPage: React.FC = () => {
-  const [email, setEmail] = useState('admin@enter.in');
-  const [password, setPassword] = useState('adminpassword123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,12 +30,6 @@ export const AdminLoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleFillDemo = () => {
-    setEmail('admin@enter.in');
-    setPassword('adminpassword123');
-    setError(null);
   };
 
   return (
@@ -129,22 +123,9 @@ export const AdminLoginPage: React.FC = () => {
               </button>
             </div>
           </form>
-
-          {/* Quick Demo Credentials Box */}
-          <div className="pt-4 border-t border-slate-800 text-center space-y-2">
-            <div className="text-[11px] text-slate-400">
-              Assigned Seed Credentials: <code className="text-indigo-300 font-mono">admin@enter.in</code> / <code className="text-indigo-300 font-mono">adminpassword123</code>
-            </div>
-            <button
-              type="button"
-              onClick={handleFillDemo}
-              className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
-            >
-              Click to Auto-Fill Credentials
-            </button>
-          </div>
         </div>
       </div>
     </div>
   );
 };
+

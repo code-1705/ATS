@@ -1,4 +1,5 @@
-﻿import os
+import os
+import secrets
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,9 +16,10 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "mock-service-role-key")
 
     # JWT Authentication
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "enterrecruit_super_secret_jwt_key_2026_change_in_prod")
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", secrets.token_hex(32))
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+
 
     # Admin Defaults
     ADMIN_DEFAULT_EMAIL: str = os.getenv("ADMIN_DEFAULT_EMAIL", "admin@enter.in")
