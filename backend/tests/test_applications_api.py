@@ -86,6 +86,43 @@ def test_submit_targeted_job_application():
         assert res.status_code == 201
         assert res.json()["candidate_name"] == "Jane Doe"
 
+def test_submit_duplicate_application_returns_409():
+    mock_supabase = MagicMock()
+    
+    # Mock job lookup
+    mock_job_exec = MagicMock()
+    mock_job_exec.data = [MOCK_JOB]
+    
+    # Mock existing application check returning an existing app
+    mock_existing_exec = MagicMock()
+    mock_existing_exec.data = [{"id": "existing-app-uuid"}]
+
+    def table_router(table_name):
+        mock_tbl = MagicMock()
+        if table_name == "jobs":
+            mock_tbl.select.return_value.eq.return_value.execute.return_value = mock_job_exec
+        elif table_name == "applications":
+            mock_tbl.select.return_value.eq.return_value.eq.return_value.execute.return_value = mock_existing_exec
+        return mock_tbl
+
+    mock_supabase.table.side_effect = table_router
+
+    pdf_content = b"%PDF-1.4 Mock PDF Content"
+    files = {"resume": ("resume.pdf", io.BytesIO(pdf_content), "application/pdf")}
+    data = {
+        "job_id": "22222222-2222-2222-2222-222222222222",
+        "candidate_name": "Jane Doe",
+        "candidate_email": "jane@example.com",
+        "candidate_phone": "+1234567890",
+        "brief_note": "Applying again"
+    }
+
+    with patch("backend.routers.public.get_supabase_client", return_value=mock_supabase):
+        res = client.post("/api/applications", data=data, files=files)
+        assert res.status_code == 409
+        assert "already submitted an application" in res.json()["detail"]
+
+
 def test_admin_update_application_stage_valid():
     mock_supabase = MagicMock()
     

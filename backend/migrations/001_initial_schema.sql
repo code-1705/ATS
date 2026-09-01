@@ -1,4 +1,4 @@
-﻿-- ====================================================================
+-- ====================================================================
 -- EnterRecruit Production-Grade PostgreSQL Schema (Supabase)
 -- ====================================================================
 
@@ -68,10 +68,12 @@ CREATE TABLE IF NOT EXISTS public.applications (
     stage TEXT NOT NULL DEFAULT 'APPLIED',
     stage_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT unique_candidate_job UNIQUE (job_id, candidate_email),
     CONSTRAINT check_valid_stage CHECK (
         stage IN ('APPLIED', 'REJECT', 'R1', 'R1_REJECT', 'R2', 'R2_REJECT', 'R3', 'R3_REJECT', 'APPROVED')
     )
 );
+
 
 DROP TRIGGER IF EXISTS set_timestamp_applications ON public.applications;
 CREATE TRIGGER set_timestamp_applications
