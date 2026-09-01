@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from backend.models.stages import (
     ApplicationStage,
     STAGE_LABELS,
@@ -72,3 +72,30 @@ def test_invalid_stage_transition_handling():
     # Invalid string values
     assert is_valid_stage_transition("NON_EXISTENT_STAGE", "R1") is False
     assert is_valid_stage_transition("APPLIED", "INVALID_TARGET") is False
+
+def test_get_valid_next_stages():
+    from backend.models.stages import get_valid_next_stages
+    
+    applied_next = get_valid_next_stages("APPLIED")
+    assert "R1" in applied_next
+    assert "REJECT" in applied_next
+    assert "APPROVED" in applied_next
+
+    reject_next = get_valid_next_stages("REJECT")
+    assert "APPLIED" in reject_next
+    assert "R1" in reject_next
+
+    r1_reject_next = get_valid_next_stages("R1_REJECT")
+    assert "R1" in r1_reject_next
+    assert "R2" in r1_reject_next
+
+    r3_reject_next = get_valid_next_stages("R3_REJECT")
+    assert "R3" in r3_reject_next
+    assert "APPROVED" in r3_reject_next
+
+    approved_next = get_valid_next_stages("APPROVED")
+    assert approved_next == []
+
+    invalid_next = get_valid_next_stages("INVALID_STAGE")
+    assert invalid_next == []
+

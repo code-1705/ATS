@@ -1,4 +1,4 @@
-﻿from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from backend.models.stages import ApplicationStage
 
@@ -31,6 +31,8 @@ class ApplicationResponse(BaseModel):
     stage_label: Optional[str] = None
     stage_updated_at: Optional[str] = None
     created_at: Optional[str] = None
+    valid_next_stages: List[str] = Field(default_factory=list)
+
 
 class ApplicationListResponse(BaseModel):
     total: int

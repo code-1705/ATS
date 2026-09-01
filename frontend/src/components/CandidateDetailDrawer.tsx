@@ -24,6 +24,75 @@ interface CandidateDetailDrawerProps {
   onStageUpdated: () => void;
 }
 
+const STAGE_ACTION_CONFIG: Record<
+  string,
+  { label: string; bg: string; hover: string; text: string; icon: 'check' | 'reject' | 'clock' }
+> = {
+  APPLIED: {
+    label: 'Re-open to Applied',
+    bg: 'bg-slate-700',
+    hover: 'hover:bg-slate-800',
+    text: 'text-white',
+    icon: 'clock'
+  },
+  R1: {
+    label: 'Advance to R1',
+    bg: 'bg-blue-600',
+    hover: 'hover:bg-blue-700',
+    text: 'text-white',
+    icon: 'check'
+  },
+  R1_REJECT: {
+    label: 'R1 Reject',
+    bg: 'bg-orange-600',
+    hover: 'hover:bg-orange-700',
+    text: 'text-white',
+    icon: 'reject'
+  },
+  R2: {
+    label: 'Advance to R2',
+    bg: 'bg-indigo-600',
+    hover: 'hover:bg-indigo-700',
+    text: 'text-white',
+    icon: 'check'
+  },
+  R2_REJECT: {
+    label: 'R2 Reject',
+    bg: 'bg-amber-600',
+    hover: 'hover:bg-amber-700',
+    text: 'text-white',
+    icon: 'reject'
+  },
+  R3: {
+    label: 'Advance to R3',
+    bg: 'bg-purple-600',
+    hover: 'hover:bg-purple-700',
+    text: 'text-white',
+    icon: 'check'
+  },
+  R3_REJECT: {
+    label: 'R3 Reject',
+    bg: 'bg-red-600',
+    hover: 'hover:bg-red-700',
+    text: 'text-white',
+    icon: 'reject'
+  },
+  APPROVED: {
+    label: 'Approve Candidate',
+    bg: 'bg-emerald-600',
+    hover: 'hover:bg-emerald-700',
+    text: 'text-white',
+    icon: 'check'
+  },
+  REJECT: {
+    label: 'Reject Candidate',
+    bg: 'bg-rose-600',
+    hover: 'hover:bg-rose-700',
+    text: 'text-white',
+    icon: 'reject'
+  }
+};
+
 export const CandidateDetailDrawer: React.FC<CandidateDetailDrawerProps> = ({
   applicationId,
   onClose,
@@ -69,8 +138,6 @@ export const CandidateDetailDrawer: React.FC<CandidateDetailDrawerProps> = ({
 
   if (!applicationId) return null;
 
-  const currentStage = app?.stage.toUpperCase() || 'APPLIED';
-
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/50 backdrop-blur-2xs animate-in fade-in duration-150">
       <div className="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col border-l border-slate-200 overflow-hidden animate-in slide-in-from-right duration-200">
@@ -111,6 +178,7 @@ export const CandidateDetailDrawer: React.FC<CandidateDetailDrawerProps> = ({
                   <span className="text-xs text-slate-500 block mb-1">Current Hiring Stage</span>
                   <StageBadge
                     currentStage={app.stage}
+                    validNextStages={app.valid_next_stages}
                     onStageChange={handleStageChange}
                     interactive={true}
                   />
@@ -142,90 +210,33 @@ export const CandidateDetailDrawer: React.FC<CandidateDetailDrawerProps> = ({
                   Quick Stage Actions
                 </span>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {currentStage === 'APPLIED' && (
-                    <>
-                      <button
-                        onClick={() => handleStageChange('R1')}
-                        disabled={updatingStage}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition cursor-pointer"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Advance to R1
-                      </button>
-                      <button
-                        onClick={() => handleStageChange('REJECT')}
-                        disabled={updatingStage}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 transition cursor-pointer"
-                      >
-                        <XCircle className="w-3.5 h-3.5 mr-1.5" /> Reject Initial
-                      </button>
-                    </>
-                  )}
-
-                  {currentStage === 'R1' && (
-                    <>
-                      <button
-                        onClick={() => handleStageChange('R2')}
-                        disabled={updatingStage}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition cursor-pointer"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Advance to R2
-                      </button>
-                      <button
-                        onClick={() => handleStageChange('R1_REJECT')}
-                        disabled={updatingStage}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-orange-600 text-white text-xs font-semibold hover:bg-orange-700 transition cursor-pointer"
-                      >
-                        <XCircle className="w-3.5 h-3.5 mr-1.5" /> R1 Reject
-                      </button>
-                    </>
-                  )}
-
-                  {currentStage === 'R2' && (
-                    <>
-                      <button
-                        onClick={() => handleStageChange('R3')}
-                        disabled={updatingStage}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition cursor-pointer"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Advance to R3
-                      </button>
-                      <button
-                        onClick={() => handleStageChange('R2_REJECT')}
-                        disabled={updatingStage}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition cursor-pointer"
-                      >
-                        <XCircle className="w-3.5 h-3.5 mr-1.5" /> R2 Reject
-                      </button>
-                    </>
-                  )}
-
-                  {currentStage === 'R3' && (
-                    <>
-                      <button
-                        onClick={() => handleStageChange('APPROVED')}
-                        disabled={updatingStage}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition cursor-pointer"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Approve Candidate
-                      </button>
-                      <button
-                        onClick={() => handleStageChange('R3_REJECT')}
-                        disabled={updatingStage}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
-                      >
-                        <XCircle className="w-3.5 h-3.5 mr-1.5" /> R3 Reject
-                      </button>
-                    </>
-                  )}
-
-                  {currentStage.includes('REJECT') && (
-                    <button
-                      onClick={() => handleStageChange('APPLIED')}
-                      disabled={updatingStage}
-                      className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-700 text-white text-xs font-semibold hover:bg-slate-800 transition cursor-pointer"
-                    >
-                      <Clock className="w-3.5 h-3.5 mr-1.5" /> Re-open Candidate
-                    </button>
+                  {(!app.valid_next_stages || app.valid_next_stages.length === 0) ? (
+                    <span className="text-xs text-slate-500 italic">
+                      No further stage transitions available (terminal stage).
+                    </span>
+                  ) : (
+                    app.valid_next_stages.map((nextStage) => {
+                      const actionConfig = STAGE_ACTION_CONFIG[nextStage] || {
+                        label: `Move to ${nextStage}`,
+                        bg: 'bg-indigo-600',
+                        hover: 'hover:bg-indigo-700',
+                        text: 'text-white',
+                        icon: 'check'
+                      };
+                      return (
+                        <button
+                          key={nextStage}
+                          onClick={() => handleStageChange(nextStage)}
+                          disabled={updatingStage}
+                          className={`inline-flex items-center px-3 py-1.5 rounded-lg ${actionConfig.bg} ${actionConfig.text} ${actionConfig.hover} text-xs font-semibold transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          {actionConfig.icon === 'check' && <CheckCircle className="w-3.5 h-3.5 mr-1.5" />}
+                          {actionConfig.icon === 'reject' && <XCircle className="w-3.5 h-3.5 mr-1.5" />}
+                          {actionConfig.icon === 'clock' && <Clock className="w-3.5 h-3.5 mr-1.5" />}
+                          {actionConfig.label}
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               </div>

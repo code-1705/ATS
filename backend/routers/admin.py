@@ -18,8 +18,10 @@ from backend.schemas.application import (
 from backend.models.stages import (
     ApplicationStage,
     STAGE_LABELS,
-    is_valid_stage_transition
+    is_valid_stage_transition,
+    get_valid_next_stages
 )
+
 
 logger = logging.getLogger("enterrecruit.admin")
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard & Management"], dependencies=[Depends(get_current_admin)])
@@ -189,7 +191,8 @@ async def list_candidate_applications(
                 stage=stg,
                 stage_label=label,
                 stage_updated_at=str(app.get("stage_updated_at", "")),
-                created_at=str(app.get("created_at", ""))
+                created_at=str(app.get("created_at", "")),
+                valid_next_stages=get_valid_next_stages(stg)
             )
         )
 
@@ -240,6 +243,7 @@ async def get_single_candidate_details(application_id: str):
         stage_label=label,
         stage_updated_at=str(app.get("stage_updated_at", "")),
         created_at=str(app.get("created_at", "")),
+        valid_next_stages=get_valid_next_stages(stg),
         audit_logs=audit_logs
     )
 
@@ -311,8 +315,10 @@ async def update_candidate_stage(
         stage=target_stage,
         stage_label=STAGE_LABELS.get(payload.stage, target_stage),
         stage_updated_at=str(updated.get("stage_updated_at", "")),
-        created_at=str(updated.get("created_at", ""))
+        created_at=str(updated.get("created_at", "")),
+        valid_next_stages=get_valid_next_stages(target_stage)
     )
+
 
 @router.get("/applications/{application_id}/resume")
 async def preview_or_download_resume(

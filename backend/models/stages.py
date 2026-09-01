@@ -1,4 +1,4 @@
-﻿from enum import Enum
+from enum import Enum
 from typing import List, Dict, Set
 
 class ApplicationStage(str, Enum):
@@ -84,3 +84,27 @@ def is_valid_stage_transition(current_stage: str, target_stage: str) -> bool:
     
     allowed = VALID_STAGE_TRANSITIONS.get(curr, set())
     return target in allowed
+
+def get_valid_next_stages(current_stage: str) -> List[str]:
+    """
+    Returns sorted list of valid next stage string values for a given current stage.
+    """
+    try:
+        curr = ApplicationStage(current_stage)
+    except ValueError:
+        return []
+
+    allowed = VALID_STAGE_TRANSITIONS.get(curr, set())
+    order = [
+        ApplicationStage.APPLIED,
+        ApplicationStage.R1,
+        ApplicationStage.R1_REJECT,
+        ApplicationStage.R2,
+        ApplicationStage.R2_REJECT,
+        ApplicationStage.R3,
+        ApplicationStage.R3_REJECT,
+        ApplicationStage.APPROVED,
+        ApplicationStage.REJECT
+    ]
+    return [s.value for s in order if s in allowed]
+

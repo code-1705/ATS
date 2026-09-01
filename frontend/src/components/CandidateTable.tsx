@@ -137,9 +137,11 @@ export const CandidateTable: React.FC<CandidateTableProps> = ({
               <td className="py-4 px-4 whitespace-nowrap">
                 <StageBadge
                   currentStage={app.stage}
+                  validNextStages={app.valid_next_stages}
                   onStageChange={(newStage) => onStageChange(app.id, newStage)}
                   interactive={true}
                 />
+
               </td>
 
               {/* Actions */}
