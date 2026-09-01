@@ -1,7 +1,9 @@
 import logging
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 from fastapi.responses import FileResponse
 from typing import List, Optional
+
 from pathlib import Path
 from backend.core.supabase_client import get_supabase_client
 from backend.routers.auth import get_current_admin
@@ -266,8 +268,13 @@ async def update_candidate_stage(
             detail=f"Invalid stage transition from '{current_stage}' to '{target_stage}'."
         )
 
+    now_iso = datetime.now(timezone.utc).isoformat()
     # Update stage in applications table
-    update_res = supabase.table("applications").update({"stage": target_stage}).eq("id", application_id).execute()
+    update_res = supabase.table("applications").update({
+        "stage": target_stage,
+        "stage_updated_at": now_iso
+    }).eq("id", application_id).execute()
+
     if not update_res.data or len(update_res.data) == 0:
         raise HTTPException(status_code=500, detail="Failed to update stage.")
 
