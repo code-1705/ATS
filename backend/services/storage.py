@@ -1,11 +1,13 @@
-﻿import os
+import os
 import uuid
+import logging
 import aiofiles
 from pathlib import Path
 from fastapi import UploadFile, HTTPException
 from backend.core.supabase_client import get_supabase_client
 from backend.core.config import settings
 
+logger = logging.getLogger("enterrecruit.storage")
 ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 LOCAL_UPLOAD_DIR = Path("uploads/resumes")
@@ -63,11 +65,13 @@ async def save_resume_file(file: UploadFile) -> dict:
         public_url = supabase.storage.from_("resumes").get_public_url(safe_filename)
         if public_url:
             resume_url = public_url
-    except Exception:
-        # Fallback to local URL path
-        pass
+    except Exception as e:
+        logger.warning(
+            f"Supabase storage upload failed for '{safe_filename}', falling back to local storage URL: {str(e)}"
+        )
 
     return {
+
         "original_filename": file.filename,
         "saved_filename": safe_filename,
         "file_size": file_size,

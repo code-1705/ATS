@@ -68,3 +68,20 @@ def test_admin_list_jobs_with_app_count():
         assert data["total"] == 1
         assert data["jobs"][0]["applications_count"] == 5
 
+def test_admin_update_job_with_is_active_false():
+    mock_supabase = MagicMock()
+    mock_exec = MagicMock()
+    mock_updated_job = dict(MOCK_JOB, is_active=False)
+    mock_exec.data = [mock_updated_job]
+    mock_supabase.table.return_value.update.return_value.eq.return_value.execute.return_value = mock_exec
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.put(
+            f"/api/admin/jobs/{MOCK_JOB['id']}",
+            json={"is_active": False},
+            headers=auth_headers
+        )
+        assert res.status_code == 200
+        assert res.json()["is_active"] is False
+
+

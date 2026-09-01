@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 from typing import List, Dict, Any
 from backend.core.config import settings
 from backend.core.security import get_password_hash
@@ -113,8 +113,12 @@ def seed_admin_user() -> Dict[str, Any]:
     }
     
     insert_res = supabase.table("users").insert(user_payload).execute()
+    if not insert_res.data or len(insert_res.data) == 0:
+        logger.error(f"Failed to insert admin user {email} into Supabase.")
+        raise RuntimeError(f"Failed to create admin user {email} in database.")
+
     logger.info(f"Admin user {email} created successfully.")
-    return insert_res.data[0] if insert_res.data else user_payload
+    return insert_res.data[0]
 
 def seed_default_jobs() -> List[Dict[str, Any]]:
     """
@@ -133,10 +137,14 @@ def seed_default_jobs() -> List[Dict[str, Any]]:
     
     if jobs_to_insert:
         insert_res = supabase.table("jobs").insert(jobs_to_insert).execute()
+        if not insert_res.data or len(insert_res.data) == 0:
+            logger.error("Failed to insert default jobs into Supabase.")
+            raise RuntimeError("Failed to seed default jobs into database.")
         logger.info(f"Seeded {len(jobs_to_insert)} new default jobs into Supabase.")
-        return response.data + (insert_res.data or [])
+        return (response.data or []) + insert_res.data
     
-    return response.data
+    return response.data or []
+
 
 def run_seed_bootstrap():
     """
