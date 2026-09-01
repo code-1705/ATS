@@ -1,4 +1,4 @@
-﻿import io
+import io
 import pytest
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
@@ -108,3 +108,36 @@ def test_admin_update_application_stage_valid():
         )
         assert res.status_code == 200
         assert res.json()["stage"] == "R1"
+
+def test_unauthenticated_resume_access_is_rejected():
+    res = client.get("/api/admin/applications/33333333-3333-3333-3333-333333333333/resume")
+    assert res.status_code == 401
+    assert "Authentication token required" in res.json()["detail"]
+
+def test_authenticated_resume_access_with_bearer_token():
+    mock_supabase = MagicMock()
+    mock_exec = MagicMock()
+    mock_exec.data = [{"resume_url": "https://supabase.example.com/resumes/resume.pdf", "resume_filename": "resume.pdf"}]
+    mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_exec
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.get(
+            "/api/admin/applications/33333333-3333-3333-3333-333333333333/resume",
+            headers=auth_headers
+        )
+        assert res.status_code == 200
+        assert res.json()["resume_url"] == "https://supabase.example.com/resumes/resume.pdf"
+
+def test_authenticated_resume_access_with_query_token():
+    mock_supabase = MagicMock()
+    mock_exec = MagicMock()
+    mock_exec.data = [{"resume_url": "https://supabase.example.com/resumes/resume.pdf", "resume_filename": "resume.pdf"}]
+    mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_exec
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.get(
+            f"/api/admin/applications/33333333-3333-3333-3333-333333333333/resume?token={admin_token}"
+        )
+        assert res.status_code == 200
+        assert res.json()["resume_url"] == "https://supabase.example.com/resumes/resume.pdf"
+

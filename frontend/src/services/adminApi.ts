@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import type {
   Job,
   JobCreatePayload,
@@ -44,6 +44,12 @@ export const clearAuthToken = () => {
 export const isAuthenticated = (): boolean => {
   return !!localStorage.getItem(TOKEN_KEY);
 };
+
+export const getResumeDownloadUrl = (applicationId: string): string => {
+  const token = getAuthToken();
+  return `/api/admin/applications/${applicationId}/resume${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+};
+
 
 // Authentication Endpoints
 export const loginAdmin = async (email: string, password: string): Promise<TokenResponse> => {

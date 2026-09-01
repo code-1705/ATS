@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, HTTPException, Depends, Query, status
+from fastapi import APIRouter, HTTPException, Depends, Query, status
 from fastapi.responses import FileResponse
 from typing import List, Optional
 from pathlib import Path
@@ -299,7 +299,10 @@ async def update_candidate_stage(
     )
 
 @router.get("/applications/{application_id}/resume")
-async def preview_or_download_resume(application_id: str):
+async def preview_or_download_resume(
+    application_id: str,
+    admin: dict = Depends(get_current_admin)
+):
     """
     Streams the candidate's resume for in-browser preview or download.
     """
