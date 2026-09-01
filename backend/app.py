@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,10 +46,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure local upload directories exist and mount static files
+# Ensure local upload directories exist
 upload_dir = Path("uploads/resumes")
 upload_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 
 # Include API Routers
 app.include_router(public.router, prefix=settings.API_V1_PREFIX)

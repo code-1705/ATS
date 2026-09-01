@@ -334,6 +334,16 @@ async def preview_or_download_resume(
     resume_url = app.get("resume_url", "")
     filename = app.get("resume_filename", "resume.pdf")
 
+    # Attempt to fetch signed URL from Supabase Storage
+    try:
+        storage_path = Path(resume_url).name
+        signed_res = supabase.storage.from_("resumes").create_signed_url(storage_path, 60)
+        if isinstance(signed_res, dict) and signed_res.get("signedURL"):
+            return {"resume_url": signed_res["signedURL"], "filename": filename}
+    except Exception:
+        pass
+
+
     # If it's a local path
     if resume_url.startswith("/uploads/resumes/"):
         file_path = Path(resume_url.lstrip("/"))
