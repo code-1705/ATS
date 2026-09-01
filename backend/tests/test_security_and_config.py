@@ -12,6 +12,9 @@ def test_settings_defaults():
     assert settings.ADMIN_DEFAULT_EMAIL == "admin@enter.in"
     assert settings.ACCESS_TOKEN_EXPIRE_MINUTES >= 60
     assert len(settings.JWT_SECRET_KEY) >= 32
+    assert "*" not in settings.CORS_ORIGINS
+    assert len(settings.CORS_ORIGINS) > 0
+
 
 
 def test_password_hashing_and_verification():
