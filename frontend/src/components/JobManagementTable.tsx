@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   Plus,
   Edit2,
@@ -76,16 +76,23 @@ export const JobManagementTable: React.FC<JobManagementTableProps> = ({
                   <td className="py-4 px-4 sm:px-6">
                     <div className="flex flex-col">
                       <span className="font-bold text-slate-900 text-sm">{job.title}</span>
-                      <a
-                        href={`/jobs/${job.id}/apply`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center text-[11px] text-indigo-600 hover:underline mt-0.5"
-                      >
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Direct apply link
-                      </a>
+                      {job.is_active ? (
+                        <a
+                          href={`/jobs/${job.id}/apply`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center text-[11px] text-indigo-600 hover:underline mt-0.5"
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          Direct apply link
+                        </a>
+                      ) : (
+                        <span className="text-[11px] text-slate-400 mt-0.5">
+                          Archived position
+                        </span>
+                      )}
                     </div>
+
                   </td>
 
                   {/* Department */}

@@ -35,12 +35,13 @@ async def list_open_jobs():
 @router.get("/jobs/{job_id}", response_model=JobResponse)
 async def get_job_details(job_id: str):
     """
-    Fetches specifications for a specific job posting.
+    Fetches specifications for a specific active job posting.
     """
     supabase = get_supabase_client()
-    res = supabase.table("jobs").select("*").eq("id", job_id).execute()
+    res = supabase.table("jobs").select("*").eq("id", job_id).eq("is_active", True).execute()
     if not res.data or len(res.data) == 0:
-        raise HTTPException(status_code=404, detail="Job not found.")
+        raise HTTPException(status_code=404, detail="Job position not found or no longer active.")
+
     
     job = res.data[0]
     return JobResponse(
