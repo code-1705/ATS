@@ -1,7 +1,7 @@
 ﻿# Implementation Plan - Submodule 1: Supabase PostgreSQL Schema, Stage FSM & Seed Data
 
 ## Overview
-This submodule establishes the foundational PostgreSQL database architecture in **Supabase** (using `supabase-py` and direct Supabase SQL migrations without SQLAlchemy), the recruitment stage Finite State Machine (FSM), and automated bootstrap seed data for **EnterRecruit**.
+This submodule establishes the production-grade PostgreSQL database architecture in **Supabase** (using `supabase-py` and direct Supabase SQL migrations without SQLAlchemy), the recruitment stage Finite State Machine (FSM), database-level integrity constraints, and automated bootstrap seed data for **EnterRecruit**.
 
 ---
 
@@ -9,20 +9,40 @@ This submodule establishes the foundational PostgreSQL database architecture in 
 
 ### 1. Supabase Client Integration (`backend/core/supabase_client.py`)
 - Direct integration with Supabase using the official Python client `supabase-py` (`Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)`).
-- Strict elimination of SQLAlchemy ORM layer. All database querying, inserting, updating, filtering, and joining occurs directly through Supabase PostgREST queries or RPC.
+- **Strict elimination of SQLAlchemy ORM layer**. All database querying, inserting, updating, filtering, and joining occurs directly through Supabase PostgREST queries or RPC.
 - Configuration loaded via `backend/core/config.py` from `.env` (`SUPABASE_URL`, `SUPABASE_KEY` / `SUPABASE_SERVICE_ROLE_KEY`).
 
 ---
 
-### 2. Supabase PostgreSQL Schema (`backend/migrations/001_initial_schema.sql`)
+### 2. Production PostgreSQL Schema & Triggers (`backend/migrations/001_initial_schema.sql`)
 
 ```sql
--- Enable UUID extension
+-- 1. Enable Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 1. Users Table (Admin Account)
+-- 2. Trigger Function for Updated Timestamps
+CREATE OR REPLACE FUNCTION trigger_set_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION trigger_set_stage_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.stage IS DISTINCT FROM OLD.stage THEN
+        NEW.stage_updated_at = NOW();
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Users Table (Admin Account & Auth)
 CREATE TABLE IF NOT EXISTS public.users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
     hashed_password TEXT NOT NULL,
     name TEXT NOT NULL DEFAULT 'System Admin',
@@ -30,9 +50,9 @@ CREATE TABLE IF NOT EXISTS public.users (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 2. Jobs Table
+-- 4. Jobs Table (Job Postings)
 CREATE TABLE IF NOT EXISTS public.jobs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     department TEXT NOT NULL,
     location TEXT NOT NULL DEFAULT 'Remote',
@@ -43,9 +63,15 @@ CREATE TABLE IF NOT EXISTS public.jobs (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 3. Applications Table
+DROP TRIGGER IF EXISTS set_timestamp_jobs ON public.jobs;
+CREATE TRIGGER set_timestamp_jobs
+BEFORE UPDATE ON public.jobs
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+-- 5. Applications Table (Candidate Submissions)
 CREATE TABLE IF NOT EXISTS public.applications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     job_id UUID NOT NULL REFERENCES public.jobs(id) ON DELETE CASCADE,
     candidate_name TEXT NOT NULL,
     candidate_email TEXT NOT NULL,
@@ -56,24 +82,60 @@ CREATE TABLE IF NOT EXISTS public.applications (
     brief_note TEXT DEFAULT '',
     stage TEXT NOT NULL DEFAULT 'APPLIED',
     stage_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT check_valid_stage CHECK (
+        stage IN ('APPLIED', 'REJECT', 'R1', 'R1_REJECT', 'R2', 'R2_REJECT', 'R3', 'R3_REJECT', 'APPROVED')
+    )
 );
 
--- 4. Application Audit Log
+DROP TRIGGER IF EXISTS set_timestamp_applications ON public.applications;
+CREATE TRIGGER set_timestamp_applications
+BEFORE UPDATE ON public.applications
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_stage_timestamp();
+
+-- 6. Application Audit Logs (Stage History Tracking)
 CREATE TABLE IF NOT EXISTS public.application_audit_logs (
     id BIGSERIAL PRIMARY KEY,
     application_id UUID NOT NULL REFERENCES public.applications(id) ON DELETE CASCADE,
     from_stage TEXT NOT NULL,
     to_stage TEXT NOT NULL,
     changed_by TEXT NOT NULL DEFAULT 'admin@enter.in',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT check_audit_from_stage CHECK (
+        from_stage IN ('APPLIED', 'REJECT', 'R1', 'R1_REJECT', 'R2', 'R2_REJECT', 'R3', 'R3_REJECT', 'APPROVED')
+    ),
+    CONSTRAINT check_audit_to_stage CHECK (
+        to_stage IN ('APPLIED', 'REJECT', 'R1', 'R1_REJECT', 'R2', 'R2_REJECT', 'R3', 'R3_REJECT', 'APPROVED')
+    )
 );
 
--- Indexes for ultra-fast filtering & searching
+-- ====================================================================
+-- Indexes for High-Performance Queries & Filtering
+-- ====================================================================
+CREATE INDEX IF NOT EXISTS idx_jobs_is_active ON public.jobs(is_active);
+CREATE INDEX IF NOT EXISTS idx_jobs_created_at ON public.jobs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_applications_job_id ON public.applications(job_id);
 CREATE INDEX IF NOT EXISTS idx_applications_stage ON public.applications(stage);
 CREATE INDEX IF NOT EXISTS idx_applications_email ON public.applications(candidate_email);
-CREATE INDEX IF NOT EXISTS idx_jobs_is_active ON public.jobs(is_active);
+CREATE INDEX IF NOT EXISTS idx_applications_created_at ON public.applications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_application_id ON public.application_audit_logs(application_id);
+
+-- ====================================================================
+-- Row Level Security (RLS) Configurations
+-- ====================================================================
+ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.application_audit_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can view active jobs" ON public.jobs;
+CREATE POLICY "Public can view active jobs" ON public.jobs
+FOR SELECT USING (is_active = TRUE);
+
+DROP POLICY IF EXISTS "Public can submit applications" ON public.applications;
+CREATE POLICY "Public can submit applications" ON public.applications
+FOR INSERT WITH CHECK (TRUE);
 ```
 
 ---
@@ -104,13 +166,7 @@ The application enforces the exact recruitment lifecycle stages defined in the s
 
 ---
 
-### 4. Supabase Storage Bucket Provisioning
-- Bucket: `resumes`
-- Policy: Public read via signed URLs or authenticated download for admin.
-
----
-
-### 5. Automatic Database Seed Script (`backend/services/seed_service.py`)
+### 4. Automatic Database Seed Script (`backend/services/seed_service.py`)
 
 On initialization, the service checks Supabase and auto-provisions if records don't exist:
 
@@ -132,7 +188,7 @@ On initialization, the service checks Supabase and auto-provisions if records do
 ---
 
 ## Verification Plan
-- Author test script `backend/tests/test_supabase_connection.py` to verify:
-  1. Successful connection to Supabase PostgreSQL using `supabase-py`.
-  2. Verification that `users`, `jobs`, and `applications` tables exist and queries execute cleanly.
-  3. Verification that `seed_service` provisions exactly 1 admin and 10 active jobs.
+- Author test suite in `backend/tests/` verifying:
+  1. All 9 recruitment stages exist with valid FSM transitions and UI badge color mappings.
+  2. Password hashing & JWT token issuance/verification with zero warnings.
+  3. Seed service structure creates exactly 1 admin and 10 jobs without duplication.
