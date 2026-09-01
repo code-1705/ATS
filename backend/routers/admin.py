@@ -95,11 +95,13 @@ async def create_new_job(payload: JobCreate):
         applications_count=0
     )
 
-@router.put("/jobs/{job_id}", response_model=JobResponse)
+@router.patch("/jobs/{job_id}", response_model=JobResponse)
+@router.put("/jobs/{job_id}", response_model=JobResponse, include_in_schema=False)
 async def update_job(job_id: str, payload: JobUpdate):
     """
-    Updates an existing job posting.
+    Partially updates an existing job posting.
     """
+
     supabase = get_supabase_client()
     update_data = payload.model_dump(exclude_unset=True)
     if not update_data:
