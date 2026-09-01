@@ -61,10 +61,7 @@ async def save_resume_file(file: UploadFile) -> dict:
             file=content,
             file_options={"content-type": file.content_type or "application/octet-stream"}
         )
-        # Get public URL if bucket is public
-        public_url = supabase.storage.from_("resumes").get_public_url(safe_filename)
-        if public_url:
-            resume_url = public_url
+        # Store internal URL reference instead of public URL
     except Exception as e:
         logger.warning(
             f"Supabase storage upload failed for '{safe_filename}', falling back to local storage URL: {str(e)}"

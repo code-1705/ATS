@@ -118,7 +118,8 @@ async def submit_general_application(
         candidate_name=created_app["candidate_name"],
         candidate_email=created_app["candidate_email"],
         candidate_phone=created_app["candidate_phone"],
-        resume_url=created_app["resume_url"],
+        resume_url="",
+
         resume_filename=created_app["resume_filename"],
         resume_file_size=created_app["resume_file_size"],
         brief_note=created_app.get("brief_note", ""),
