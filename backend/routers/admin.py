@@ -37,34 +37,36 @@ async def list_all_jobs_for_admin():
     Returns all jobs with application counts per job.
     """
     supabase = get_supabase_client()
-    jobs_res = supabase.table("jobs").select("*").order("created_at", desc=True).execute()
+    jobs_res = supabase.table("jobs").select("*, applications(count)").order("created_at", desc=True).execute()
     jobs_data = jobs_res.data or []
 
-    # Get application counts per job
-    apps_res = supabase.table("applications").select("job_id").execute()
-    apps_data = apps_res.data or []
-    counts_map = {}
-    for app in apps_data:
-        jid = str(app["job_id"])
-        counts_map[jid] = counts_map.get(jid, 0) + 1
+    formatted_jobs = []
+    for job in jobs_data:
+        apps_meta = job.get("applications")
+        if isinstance(apps_meta, list) and len(apps_meta) > 0:
+            app_count = apps_meta[0].get("count", 0) if isinstance(apps_meta[0], dict) else len(apps_meta)
+        elif isinstance(apps_meta, dict):
+            app_count = apps_meta.get("count", 0)
+        else:
+            app_count = 0
 
-    formatted_jobs = [
-        JobResponse(
-            id=str(job["id"]),
-            title=job["title"],
-            department=job["department"],
-            location=job.get("location", "Remote"),
-            job_type=job.get("job_type", "Full-Time"),
-            description=job["description"],
-            is_active=job.get("is_active", True),
-            created_at=str(job.get("created_at", "")),
-            updated_at=str(job.get("updated_at", "")),
-            applications_count=counts_map.get(str(job["id"]), 0)
+        formatted_jobs.append(
+            JobResponse(
+                id=str(job["id"]),
+                title=job["title"],
+                department=job["department"],
+                location=job.get("location", "Remote"),
+                job_type=job.get("job_type", "Full-Time"),
+                description=job["description"],
+                is_active=job.get("is_active", True),
+                created_at=str(job.get("created_at", "")),
+                updated_at=str(job.get("updated_at", "")),
+                applications_count=app_count
+            )
         )
-        for job in jobs_data
-    ]
 
     return JobListResponse(total=len(formatted_jobs), jobs=formatted_jobs)
+
 
 @router.post("/jobs", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_job(payload: JobCreate):
@@ -151,21 +153,15 @@ async def list_candidate_applications(
         query = query.eq("job_id", job_id)
     if stage and stage.upper() != "ALL":
         query = query.eq("stage", stage.upper())
+    if search and search.strip():
+        term = search.strip()
+        query = query.or_(f"candidate_name.ilike.%{term}%,candidate_email.ilike.%{term}%,candidate_phone.ilike.%{term}%")
 
     res = query.execute()
     apps = res.data or []
 
-    # Apply search filter if present
-    if search and search.strip():
-        term = search.strip().lower()
-        apps = [
-            a for a in apps
-            if term in a.get("candidate_name", "").lower()
-            or term in a.get("candidate_email", "").lower()
-            or term in a.get("candidate_phone", "").lower()
-        ]
-
     formatted_apps = []
+
     for app in apps:
         job_info = app.get("jobs") or {}
         stg = app.get("stage", "APPLIED")

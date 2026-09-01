@@ -202,3 +202,17 @@ def test_authenticated_resume_access_with_query_token():
         assert res.status_code == 200
         assert res.json()["resume_url"] == "https://supabase.example.com/resumes/resume.pdf"
 
+def test_admin_list_applications_with_search():
+    mock_supabase = MagicMock()
+    mock_exec = MagicMock()
+    mock_exec.data = [MOCK_APP]
+    mock_supabase.table.return_value.select.return_value.order.return_value.or_.return_value.execute.return_value = mock_exec
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.get("/api/admin/applications?search=jane", headers=auth_headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["total"] == 1
+        assert data["applications"][0]["candidate_name"] == "Jane Doe"
+
+
