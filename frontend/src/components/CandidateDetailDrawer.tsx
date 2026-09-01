@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   X,
   User,
@@ -14,7 +14,7 @@ import {
   History,
   Loader2
 } from 'lucide-react';
-import { getApplicationDetails, updateApplicationStage } from '../services/adminApi';
+import { getApplicationDetails, updateApplicationStage, getResumeDownloadUrl } from '../services/adminApi';
 import type { ApplicationDetailResponse, ApplicationStage } from '../types';
 import { StageBadge } from './StageBadge';
 
@@ -117,7 +117,7 @@ export const CandidateDetailDrawer: React.FC<CandidateDetailDrawerProps> = ({
                 </div>
                 <div className="flex items-center space-x-2">
                   <a
-                    href={`/api/admin/applications/${app.id}/resume`}
+                    href={getResumeDownloadUrl(app.id)}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/70 border border-indigo-200 px-3 py-2 rounded-lg transition"
@@ -126,7 +126,7 @@ export const CandidateDetailDrawer: React.FC<CandidateDetailDrawerProps> = ({
                     Preview Resume
                   </a>
                   <a
-                    href={`/api/admin/applications/${app.id}/resume`}
+                    href={getResumeDownloadUrl(app.id)}
                     download={app.resume_filename}
                     className="inline-flex items-center text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3 py-2 rounded-lg transition"
                   >
