@@ -14,6 +14,7 @@ def test_settings_defaults():
     assert len(settings.JWT_SECRET_KEY) >= 32
     assert "*" not in settings.CORS_ORIGINS
     assert len(settings.CORS_ORIGINS) > 0
+    assert "https://atsrecruit.vercel.app" in settings.CORS_ORIGINS
 
 
 

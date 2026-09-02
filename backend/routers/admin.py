@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, Query, status
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from typing import List, Optional
 
 from pathlib import Path
@@ -402,35 +402,55 @@ async def preview_or_download_resume(
     resume_url = app.get("resume_url", "")
     filename = app.get("resume_filename", "resume.pdf")
 
-    # Attempt to fetch signed URL from Supabase Storage
+    if not resume_url:
+        raise HTTPException(status_code=404, detail="No resume uploaded for this application.")
+
+    storage_path = Path(resume_url).name
+    media_type = "application/pdf" if filename.lower().endswith(".pdf") else "application/octet-stream"
+
+    # 1. Attempt to fetch signed URL from Supabase Storage (1-hour validity)
     try:
-        storage_path = Path(resume_url).name
-        signed_res = supabase.storage.from_("resumes").create_signed_url(storage_path, 60)
-        if isinstance(signed_res, dict) and signed_res.get("signedURL"):
+        signed_res = supabase.storage.from_("resumes").create_signed_url(storage_path, 3600)
+        signed_url = (
+            signed_res.get("signedURL") or signed_res.get("signedUrl")
+            if isinstance(signed_res, dict)
+            else None
+        )
+        if signed_url:
             if redirect:
-                return RedirectResponse(url=signed_res["signedURL"], status_code=status.HTTP_307_TEMPORARY_REDIRECT)
-            return {"resume_url": signed_res["signedURL"], "filename": filename}
-    except Exception:
-        pass
+                return RedirectResponse(url=signed_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+            return {"resume_url": signed_url, "filename": filename}
+    except Exception as e:
+        logger.warning(f"Could not generate signed Supabase URL for '{storage_path}': {e}")
 
+    # 2. Attempt to stream bytes directly from Supabase Storage
+    try:
+        file_bytes = supabase.storage.from_("resumes").download(storage_path)
+        if isinstance(file_bytes, (bytes, bytearray)) and len(file_bytes) > 0:
+            return Response(
+                content=file_bytes,
+                media_type=media_type,
+                headers={"Content-Disposition": f'inline; filename="{filename}"'}
+            )
+    except Exception as e:
+        logger.warning(f"Could not download file bytes from Supabase Storage for '{storage_path}': {e}")
 
-    # If it's a local path
-    if resume_url.startswith("/uploads/resumes/"):
-        file_path = Path(resume_url.lstrip("/"))
-        if not file_path.exists():
-            # Check relative to backend or root
-            file_path = Path("uploads/resumes") / Path(resume_url).name
-        
-        if file_path.exists():
-            media_type = "application/pdf" if file_path.suffix.lower() == ".pdf" else "application/octet-stream"
+    # 3. Fallback to local filesystem paths (local dev environment or /tmp cache)
+    candidate_paths = [
+        Path(resume_url.lstrip("/")),
+        Path("uploads/resumes") / storage_path,
+        Path("/tmp/uploads/resumes") / storage_path,
+    ]
+    for file_path in candidate_paths:
+        if file_path.is_file():
             return FileResponse(
                 path=str(file_path),
                 filename=filename,
                 media_type=media_type,
-                headers={"Content-Disposition": f"inline; filename=\"{filename}\""}
+                headers={"Content-Disposition": f'inline; filename="{filename}"'}
             )
 
-    return {"resume_url": resume_url, "filename": filename}
+    raise HTTPException(status_code=404, detail=f"Resume file '{filename}' was not found in storage or disk.")
 
 
 @router.get("/stats", response_model=DashboardStatsResponse)

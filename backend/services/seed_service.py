@@ -149,11 +149,29 @@ def seed_default_jobs(force: bool = False) -> List[Dict[str, Any]]:
     return (response.data or []) + insert_res.data
 
 
-def run_seed_bootstrap(force: bool = False):
+def ensure_storage_bucket_exists():
     """
-    Entrypoint for bootstrapping the database on startup or via CLI.
+    Guarantees that the 'resumes' storage bucket exists in Supabase for candidate uploads.
     """
     try:
+        supabase = get_supabase_client()
+        buckets = supabase.storage.list_buckets()
+        bucket_names = [b.name for b in (buckets or [])]
+        if "resumes" not in bucket_names:
+            supabase.storage.create_bucket("resumes", options={"public": False})
+            logger.info("Auto-provisioned missing 'resumes' bucket in Supabase Storage.")
+        else:
+            logger.info("Supabase storage bucket 'resumes' verified.")
+    except Exception as e:
+        logger.warning(f"Could not verify/create Supabase storage bucket 'resumes': {e}")
+
+
+def run_seed_bootstrap(force: bool = False):
+    """
+    Entrypoint for bootstrapping the database and storage on startup or via CLI.
+    """
+    try:
+        ensure_storage_bucket_exists()
         admin = seed_admin_user()
         jobs = seed_default_jobs(force=force)
         return {"status": "success", "admin": admin.get("email"), "jobs_count": len(jobs)}

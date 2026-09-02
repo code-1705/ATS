@@ -178,8 +178,11 @@ def test_unauthenticated_resume_access_is_rejected():
 def test_authenticated_resume_access_with_bearer_token():
     mock_supabase = MagicMock()
     mock_exec = MagicMock()
-    mock_exec.data = [{"resume_url": "https://supabase.example.com/resumes/resume.pdf", "resume_filename": "resume.pdf"}]
+    mock_exec.data = [{"resume_url": "/uploads/resumes/resume.pdf", "resume_filename": "resume.pdf"}]
     mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_exec
+    mock_supabase.storage.from_.return_value.create_signed_url.return_value = {
+        "signedURL": "https://supabase.example.com/resumes/resume.pdf"
+    }
 
     with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
         res = client.get(
@@ -192,8 +195,11 @@ def test_authenticated_resume_access_with_bearer_token():
 def test_authenticated_resume_access_with_query_token():
     mock_supabase = MagicMock()
     mock_exec = MagicMock()
-    mock_exec.data = [{"resume_url": "https://supabase.example.com/resumes/resume.pdf", "resume_filename": "resume.pdf"}]
+    mock_exec.data = [{"resume_url": "/uploads/resumes/resume.pdf", "resume_filename": "resume.pdf"}]
     mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_exec
+    mock_supabase.storage.from_.return_value.create_signed_url.return_value = {
+        "signedURL": "https://supabase.example.com/resumes/resume.pdf"
+    }
 
     with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
         res = client.get(
@@ -201,6 +207,23 @@ def test_authenticated_resume_access_with_query_token():
         )
         assert res.status_code == 200
         assert res.json()["resume_url"] == "https://supabase.example.com/resumes/resume.pdf"
+
+def test_authenticated_resume_access_redirect():
+    mock_supabase = MagicMock()
+    mock_exec = MagicMock()
+    mock_exec.data = [{"resume_url": "/uploads/resumes/resume.pdf", "resume_filename": "resume.pdf"}]
+    mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_exec
+    mock_supabase.storage.from_.return_value.create_signed_url.return_value = {
+        "signedURL": "https://supabase.example.com/resumes/resume.pdf"
+    }
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.get(
+            f"/api/admin/applications/33333333-3333-3333-3333-333333333333/resume?redirect=true&token={admin_token}",
+            follow_redirects=False
+        )
+        assert res.status_code == 307
+        assert res.headers["location"] == "https://supabase.example.com/resumes/resume.pdf"
 
 def test_admin_list_applications_with_search():
     mock_supabase = MagicMock()

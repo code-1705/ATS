@@ -46,27 +46,42 @@ async def save_resume_file(file: UploadFile) -> dict:
     safe_filename = f"resume_{unique_id}{ext}"
     local_path = LOCAL_UPLOAD_DIR / safe_filename
 
-    # Save to local filesystem as dependable storage
-    LOCAL_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    async with aiofiles.open(local_path, "wb") as f:
-        await f.write(content)
+    # Save to local filesystem if writable (dev environment or serverless /tmp cache)
+    try:
+        LOCAL_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        async with aiofiles.open(local_path, "wb") as f:
+            await f.write(content)
+    except Exception as e:
+        logger.warning(f"Local filesystem resume write skipped or failed: {str(e)}")
 
     resume_url = f"/uploads/resumes/{safe_filename}"
 
-    # Optionally sync with Supabase Storage if available
+    # Primary persistent cloud storage: Supabase Storage bucket 'resumes'
     try:
         supabase = get_supabase_client()
-        # Attempt upload to Supabase bucket 'resumes'
         supabase.storage.from_("resumes").upload(
             path=safe_filename,
             file=content,
             file_options={"content-type": file.content_type or "application/octet-stream"}
         )
-        # Store internal URL reference instead of public URL
+        logger.info(f"Resume '{safe_filename}' successfully stored in Supabase Storage.")
     except Exception as e:
         logger.warning(
-            f"Supabase storage upload failed for '{safe_filename}', falling back to local storage URL: {str(e)}"
+            f"Initial Supabase storage upload failed for '{safe_filename}': {str(e)}. Attempting bucket recovery..."
         )
+        try:
+            supabase = get_supabase_client()
+            supabase.storage.create_bucket("resumes", options={"public": False})
+            supabase.storage.from_("resumes").upload(
+                path=safe_filename,
+                file=content,
+                file_options={"content-type": file.content_type or "application/octet-stream"}
+            )
+            logger.info(f"Created 'resumes' bucket and uploaded '{safe_filename}' successfully.")
+        except Exception as retry_err:
+            logger.error(
+                f"Critical: Supabase storage upload failed after retry for '{safe_filename}': {str(retry_err)}"
+            )
 
     return {
 

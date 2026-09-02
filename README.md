@@ -15,10 +15,10 @@
 
 | Resource | URL / Access Link |
 | :--- | :--- |
-| **Public Candidate Application Portal** | [https://enterrecruit.vercel.app/](https://enterrecruit.vercel.app/) or [`/apply`](https://enterrecruit.vercel.app/apply) |
-| **Direct Single-Job Apply Route** | [`/jobs/:job_id/apply`](https://enterrecruit.vercel.app/jobs/job-id/apply) |
-| **Admin Dashboard** | [https://enterrecruit.vercel.app/admin](https://enterrecruit.vercel.app/admin) |
-| **Interactive OpenAPI Docs** | [https://enterrecruit.vercel.app/api/health](https://enterrecruit.vercel.app/api/health) |
+| **Public Candidate Application Portal** | [https://atsrecruit.vercel.app/](https://atsrecruit.vercel.app/) or [`/apply`](https://atsrecruit.vercel.app/apply) |
+| **Direct Single-Job Apply Route** | [`/jobs/:job_id/apply`](https://atsrecruit.vercel.app/jobs/job-id/apply) |
+| **Admin Dashboard** | [https://atsrecruit.vercel.app/admin](https://atsrecruit.vercel.app/admin) |
+| **Interactive OpenAPI Docs** | [https://atsrecruit.vercel.app/api/health](https://atsrecruit.vercel.app/api/health) |
 
 ### 🔑 Admin Demo Credentials
 - **Email**: `admin@enter.in`
