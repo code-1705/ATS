@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AdminNavbar } from '../components/AdminNavbar';
 import { CandidateTable } from '../components/CandidateTable';
 import { CandidateDetailDrawer } from '../components/CandidateDetailDrawer';
@@ -84,32 +84,16 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  useEffect(() => {
-    loadApplications();
-  }, [selectedJobFilter, selectedStageFilter, debouncedSearchQuery]);
-
-  useEffect(() => {
-    loadStats();
-  }, [selectedJobFilter]);
-
-  const loadDashboardData = async () => {
-    await Promise.all([loadJobs(), loadStats()]);
-  };
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const data = await getDashboardStats(selectedJobFilter !== 'ALL' ? selectedJobFilter : undefined);
       setStats(data);
     } catch (err) {
       console.error('Failed to load dashboard stats:', err);
     }
-  };
+  }, [selectedJobFilter]);
 
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     setLoadingJobs(true);
     try {
       const data = await getAdminJobs();
@@ -119,9 +103,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
     } finally {
       setLoadingJobs(false);
     }
-  };
+  }, []);
 
-  const loadApplications = async () => {
+  const loadDashboardData = useCallback(async () => {
+    await Promise.all([loadJobs(), loadStats()]);
+  }, [loadJobs, loadStats]);
+
+  const loadApplications = useCallback(async () => {
     setLoadingApps(true);
     try {
       const params: any = {};
@@ -136,7 +124,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
     } finally {
       setLoadingApps(false);
     }
-  };
+  }, [selectedJobFilter, selectedStageFilter, debouncedSearchQuery]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  useEffect(() => {
+    loadApplications();
+  }, [loadApplications]);
 
 
   // Stage Update Handler

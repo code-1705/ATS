@@ -89,7 +89,8 @@ def delete_resume_file(resume_url: Optional[str], resume_filename: Optional[str]
     # 1. Clean up local file
     if resume_url or resume_filename:
         try:
-            target_filename = resume_filename or Path(resume_url or "").name
+            # Prioritize the stored physical filename from resume_url over display resume_filename
+            target_filename = Path(resume_url or "").name or resume_filename
             if target_filename:
                 base_dir = LOCAL_UPLOAD_DIR.resolve()
                 local_file = (base_dir / target_filename).resolve()
@@ -102,9 +103,7 @@ def delete_resume_file(resume_url: Optional[str], resume_filename: Optional[str]
 
     # 2. Clean up Supabase Storage bucket
     try:
-        target_name = resume_filename
-        if not target_name and resume_url:
-            target_name = Path(resume_url).name
+        target_name = Path(resume_url or "").name or resume_filename
         if target_name:
             supabase = get_supabase_client()
             supabase.storage.from_("resumes").remove([target_name])

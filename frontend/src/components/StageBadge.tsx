@@ -9,7 +9,7 @@ interface StageBadgeProps {
   interactive?: boolean;
 }
 
-export const STAGE_CONFIGS: Record<
+const STAGE_CONFIGS: Record<
   string,
   { label: string; bg: string; text: string; border: string; dot: string }
 > = {

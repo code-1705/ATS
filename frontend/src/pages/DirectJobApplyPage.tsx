@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { JobDetailsCard } from '../components/JobDetailsCard';
@@ -27,13 +27,7 @@ export const DirectJobApplyPage: React.FC = () => {
   // Field validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (job_id) {
-      loadJob(job_id);
-    }
-  }, [job_id]);
-
-  const loadJob = async (id: string) => {
+  const loadJob = useCallback(async (id: string) => {
     setLoadingJob(true);
     try {
       const data = await getJobDetails(id);
@@ -48,7 +42,13 @@ export const DirectJobApplyPage: React.FC = () => {
     } finally {
       setLoadingJob(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (job_id) {
+      loadJob(job_id);
+    }
+  }, [job_id, loadJob]);
 
 
   const validate = (): boolean => {
