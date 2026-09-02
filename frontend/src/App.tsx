@@ -5,6 +5,7 @@ import { ApplyPage } from './pages/ApplyPage';
 import { DirectJobApplyPage } from './pages/DirectJobApplyPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { JobDetailPage } from './pages/JobDetailPage';
 import { AdminAuthGuard } from './components/AdminAuthGuard';
 
 export const App: React.FC = () => {
@@ -23,6 +24,14 @@ export const App: React.FC = () => {
           element={
             <AdminAuthGuard>
               {(user) => <AdminDashboardPage user={user} />}
+            </AdminAuthGuard>
+          }
+        />
+        <Route
+          path="/admin/jobs/:job_id"
+          element={
+            <AdminAuthGuard>
+              {(user) => <JobDetailPage user={user} />}
             </AdminAuthGuard>
           }
         />

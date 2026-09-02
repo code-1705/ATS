@@ -1,8 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   Plus,
-  Edit2,
-  Trash2,
   Users,
   MapPin,
   Clock,
@@ -12,6 +11,7 @@ import {
   Building2,
   Calendar,
   DollarSign,
+  Eye,
 } from 'lucide-react';
 import type { Job } from '../types';
 import { parseJobDescription } from '../utils/jobMetadata';
@@ -19,8 +19,8 @@ import { parseJobDescription } from '../utils/jobMetadata';
 interface JobManagementTableProps {
   jobs: Job[];
   onCreateJob: () => void;
-  onEditJob: (job: Job) => void;
-  onDeleteJob: (job: Job) => void;
+  onEditJob?: (job: Job) => void;
+  onDeleteJob?: (job: Job) => void;
   onToggleStatus: (job: Job) => Promise<void>;
   loading?: boolean;
 }
@@ -28,8 +28,6 @@ interface JobManagementTableProps {
 export const JobManagementTable: React.FC<JobManagementTableProps> = ({
   jobs,
   onCreateJob,
-  onEditJob,
-  onDeleteJob,
   onToggleStatus,
   loading = false,
 }) => {
@@ -235,24 +233,21 @@ export const JobManagementTable: React.FC<JobManagementTableProps> = ({
                       </button>
                     </td>
 
-                    {/* Action Buttons */}
+                    {/* Action Column: ONLY an Eye Button */}
                     <td className="py-4 px-4 text-right whitespace-nowrap">
-                      <div className="inline-flex items-center space-x-1.5">
-                        <button
-                          onClick={() => onEditJob(job)}
-                          className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-[var(--bg-card-hover)] transition cursor-pointer"
-                          title="Edit Job"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteJob(job)}
-                          className="p-1.5 rounded-lg text-[var(--text-dim)] hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                          title="Delete Job"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <Link
+                        to={`/admin/jobs/${job.id}`}
+                        style={{
+                          backgroundColor: 'rgba(218, 119, 86, 0.1)',
+                          borderColor: 'rgba(218, 119, 86, 0.25)',
+                          color: 'var(--primary, #da7756)',
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold hover:bg-[var(--primary)] hover:text-white transition cursor-pointer shadow-2xs group"
+                        title="View Detailed Job Profile & Candidate Analytics"
+                      >
+                        <Eye className="w-4 h-4 text-[var(--primary)] group-hover:text-white transition-colors" />
+                        <span>View Analysis</span>
+                      </Link>
                     </td>
                   </tr>
                 );

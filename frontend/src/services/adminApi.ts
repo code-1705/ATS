@@ -80,6 +80,11 @@ export const getAdminJobs = async (): Promise<Job[]> => {
   return response.data.jobs;
 };
 
+export const getAdminJobById = async (jobId: string): Promise<Job> => {
+  const response = await adminClient.get<Job>(`/admin/jobs/${jobId}`);
+  return response.data;
+};
+
 export const createAdminJob = async (payload: JobCreatePayload): Promise<Job> => {
   const response = await adminClient.post<Job>('/admin/jobs', payload);
   return response.data;

@@ -96,6 +96,40 @@ async def create_new_job(payload: JobCreate):
         applications_count=0
     )
 
+
+@router.get("/jobs/{job_id}", response_model=JobResponse)
+async def get_single_job_for_admin(job_id: str):
+    """
+    Returns full details for a single job including total application count.
+    """
+    supabase = get_supabase_client()
+    res = supabase.table("jobs").select("*, applications(count)").eq("id", job_id).execute()
+    if not res.data or len(res.data) == 0:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    
+    job = res.data[0]
+    apps_meta = job.get("applications")
+    if isinstance(apps_meta, list) and len(apps_meta) > 0:
+        app_count = apps_meta[0].get("count", 0) if isinstance(apps_meta[0], dict) else len(apps_meta)
+    elif isinstance(apps_meta, dict):
+        app_count = apps_meta.get("count", 0)
+    else:
+        app_count = 0
+
+    return JobResponse(
+        id=str(job["id"]),
+        title=job["title"],
+        department=job["department"],
+        location=job.get("location", "Remote"),
+        job_type=job.get("job_type", "Full-Time"),
+        description=job["description"],
+        is_active=job.get("is_active", True),
+        created_at=str(job.get("created_at", "")),
+        updated_at=str(job.get("updated_at", "")),
+        applications_count=app_count
+    )
+
+
 @router.patch("/jobs/{job_id}", response_model=JobResponse)
 @router.put("/jobs/{job_id}", response_model=JobResponse, include_in_schema=False)
 async def update_job(job_id: str, payload: JobUpdate):
