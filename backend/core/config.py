@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = "mock-service-role-key"
 
     # JWT Authentication
-    JWT_SECRET_KEY: str = secrets.token_hex(32)
+    JWT_SECRET_KEY: str = "enterrecruit-default-insecure-dev-jwt-secret-key-32-chars"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 

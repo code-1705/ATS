@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, Query, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from typing import List, Optional
 
 from pathlib import Path
@@ -353,6 +353,7 @@ async def update_candidate_stage(
 @router.get("/applications/{application_id}/resume")
 async def preview_or_download_resume(
     application_id: str,
+    redirect: bool = Query(False, description="Redirect browser directly to signed storage URL if available"),
     admin: dict = Depends(get_current_admin)
 ):
     """
@@ -372,6 +373,8 @@ async def preview_or_download_resume(
         storage_path = Path(resume_url).name
         signed_res = supabase.storage.from_("resumes").create_signed_url(storage_path, 60)
         if isinstance(signed_res, dict) and signed_res.get("signedURL"):
+            if redirect:
+                return RedirectResponse(url=signed_res["signedURL"], status_code=status.HTTP_307_TEMPORARY_REDIRECT)
             return {"resume_url": signed_res["signedURL"], "filename": filename}
     except Exception:
         pass

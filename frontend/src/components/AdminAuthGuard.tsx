@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { getAdminProfile, isAuthenticated, clearAuthToken } from '../services/adminApi';
 import { Loader2 } from 'lucide-react';
@@ -12,10 +12,6 @@ export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<AdminUser | null>(null);
   const location = useLocation();
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
 
   const checkAuth = async () => {
     if (!isAuthenticated()) {
@@ -33,6 +29,10 @@ export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({ children }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   if (loading) {
     return (

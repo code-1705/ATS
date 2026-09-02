@@ -103,12 +103,6 @@ export const CandidateDetailDrawer: React.FC<CandidateDetailDrawerProps> = ({
   const [updatingStage, setUpdatingStage] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (applicationId) {
-      loadDetails(applicationId);
-    }
-  }, [applicationId]);
-
   const loadDetails = async (id: string) => {
     setLoading(true);
     setError(null);
@@ -121,6 +115,12 @@ export const CandidateDetailDrawer: React.FC<CandidateDetailDrawerProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (applicationId) {
+      loadDetails(applicationId);
+    }
+  }, [applicationId]);
 
   const handleStageChange = async (newStage: ApplicationStage) => {
     if (!app) return;

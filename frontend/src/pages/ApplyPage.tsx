@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { JobSelectorDropdown } from '../components/JobSelectorDropdown';
@@ -30,26 +30,30 @@ export const ApplyPage: React.FC = () => {
   // Field validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    loadJobs();
-  }, []);
-
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     setLoadingJobs(true);
     try {
       const data = await getOpenJobs();
       setJobs(data);
-      if (preselectedJobId && data.some(j => j.id === preselectedJobId)) {
-        setSelectedJobId(preselectedJobId);
-      } else if (data.length > 0 && !selectedJobId) {
-        setSelectedJobId(data[0].id);
-      }
+      setSelectedJobId((prev) => {
+        if (preselectedJobId && data.some((j) => j.id === preselectedJobId)) {
+          return preselectedJobId;
+        }
+        if (data.length > 0 && !prev) {
+          return data[0].id;
+        }
+        return prev;
+      });
     } catch {
       setErrorMessage('Unable to load open jobs. Please make sure the backend server is running.');
     } finally {
       setLoadingJobs(false);
     }
-  };
+  }, [preselectedJobId]);
+
+  useEffect(() => {
+    loadJobs();
+  }, [loadJobs]);
 
   const selectedJob = jobs.find((j) => j.id === selectedJobId);
 

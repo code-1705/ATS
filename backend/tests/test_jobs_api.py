@@ -185,4 +185,53 @@ def test_storage_delete_resume_file_local_and_supabase(tmp_path):
         mock_supabase.storage.from_.return_value.remove.assert_called_once_with([test_file.name])
 
 
+def test_storage_delete_resume_file_prioritizes_url_over_display_name(tmp_path):
+    """
+    Issue #51 Regression Test:
+    Ensures that physical stored UUID filename from resume_url is prioritized over candidate's original display name.
+    """
+    from backend.services.storage import delete_resume_file
+    mock_supabase = MagicMock()
+
+    test_dir = tmp_path / "uploads" / "resumes"
+    test_dir.mkdir(parents=True, exist_ok=True)
+    uuid_file = test_dir / "resume_abc123uuid.pdf"
+    uuid_file.write_bytes(b"actual stored content")
+    assert uuid_file.exists()
+
+    with patch("backend.services.storage.LOCAL_UPLOAD_DIR", test_dir), \
+         patch("backend.services.storage.get_supabase_client", return_value=mock_supabase):
+        res = delete_resume_file(
+            resume_url=f"/uploads/resumes/{uuid_file.name}",
+            resume_filename="candidate_original_name.pdf"
+        )
+        assert res is True
+        # The actual UUID file must be unlinked
+        assert not uuid_file.exists()
+        mock_supabase.storage.from_.return_value.remove.assert_called_once_with([uuid_file.name])
+
+
+def test_resume_preview_redirect_with_query_param():
+    """
+    Issue #51 Regression Test:
+    Ensures that passing ?redirect=true redirects the browser directly to the signed URL.
+    """
+    mock_supabase = MagicMock()
+    app_exec = MagicMock()
+    app_exec.data = [{"resume_url": "/uploads/resumes/resume_abc.pdf", "resume_filename": "resume.pdf"}]
+    mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = app_exec
+    mock_supabase.storage.from_.return_value.create_signed_url.return_value = {
+        "signedURL": "https://storage.supabase.co/signed/resume_abc.pdf"
+    }
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.get(
+            f"/api/admin/applications/33333333-3333-3333-3333-333333333333/resume?redirect=true",
+            headers=auth_headers,
+            follow_redirects=False
+        )
+        assert res.status_code == 307
+        assert res.headers["location"] == "https://storage.supabase.co/signed/resume_abc.pdf"
+
+
 

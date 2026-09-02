@@ -21,6 +21,10 @@ async def lifespan(app: FastAPI):
     Application lifespan: auto-bootstraps admin and 10 default jobs on startup if needed.
     """
     logger.info("Starting EnterRecruit API Server...")
+    # Ensure local upload directories exist on startup
+    upload_dir = Path("uploads/resumes")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
     try:
         loop = asyncio.get_running_loop()
         bootstrap_result = await loop.run_in_executor(None, run_seed_bootstrap)
@@ -47,10 +51,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Ensure local upload directories exist
-upload_dir = Path("uploads/resumes")
-upload_dir.mkdir(parents=True, exist_ok=True)
 
 
 # Include API Routers

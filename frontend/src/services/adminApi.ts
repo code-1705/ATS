@@ -49,7 +49,7 @@ export const isAuthenticated = (): boolean => {
 
 export const getResumeDownloadUrl = (applicationId: string): string => {
   const token = getAuthToken();
-  return `/api/admin/applications/${applicationId}/resume${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+  return `/api/admin/applications/${applicationId}/resume?redirect=true${token ? `&token=${encodeURIComponent(token)}` : ''}`;
 };
 
 
