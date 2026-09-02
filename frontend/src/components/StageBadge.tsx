@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { ApplicationStage } from '../types';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { ChevronDown, Loader2, Check } from 'lucide-react';
 
 interface StageBadgeProps {
   currentStage: string;
@@ -97,6 +97,9 @@ export const StageBadge: React.FC<StageBadgeProps> = ({
   interactive = true
 }) => {
   const [updating, setUpdating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const config = STAGE_CONFIGS[currentStage.toUpperCase()] || {
     label: currentStage,
     bg: 'bg-slate-100',
@@ -114,8 +117,32 @@ export const StageBadge: React.FC<StageBadgeProps> = ({
 
   const isTerminal = validNextStages !== undefined && validNextStages.length === 0;
 
-  const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStage = e.target.value as ApplicationStage;
+  // Handle clicking outside to dismiss the custom dropdown
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const handleSelect = async (newStage: ApplicationStage) => {
+    setIsOpen(false);
     if (newStage === currentStage || !onStageChange) return;
 
     setUpdating(true);
@@ -138,9 +165,14 @@ export const StageBadge: React.FC<StageBadgeProps> = ({
   }
 
   return (
-    <div className="relative inline-flex items-center">
-      <div
-        className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all ${config.bg} ${config.text} ${config.border}`}
+    <div ref={containerRef} className="relative inline-block text-left">
+      <button
+        type="button"
+        onClick={() => !updating && setIsOpen(!isOpen)}
+        disabled={updating}
+        className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all cursor-pointer select-none hover:shadow-xs focus:outline-hidden ${config.bg} ${config.text} ${config.border} ${
+          isOpen ? 'ring-2 ring-[var(--primary)]/20 shadow-xs' : ''
+        }`}
       >
         {updating ? (
           <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin text-slate-600" />
@@ -148,21 +180,48 @@ export const StageBadge: React.FC<StageBadgeProps> = ({
           <span className={`w-1.5 h-1.5 rounded-full ${config.dot} mr-1.5 shrink-0`}></span>
         )}
         <span className="truncate max-w-[110px]">{config.label}</span>
-        <ChevronDown className="w-3.5 h-3.5 ml-1 text-slate-500 shrink-0" />
-      </div>
+        <ChevronDown
+          className={`w-3.5 h-3.5 ml-1 text-slate-500 shrink-0 transition-transform duration-150 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
 
-      <select
-        value={currentStage}
-        disabled={updating}
-        onChange={handleChange}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-      >
-        {availableStages.map((stg) => (
-          <option key={stg} value={stg}>
-            {STAGE_CONFIGS[stg]?.label || stg}
-          </option>
-        ))}
-      </select>
+      {isOpen && (
+        <div className="absolute left-0 top-full mt-1.5 z-50 min-w-[175px] bg-white border border-[var(--border-color)] rounded-xl shadow-xl py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+          <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-dim)] border-b border-[var(--border-color)]/60">
+            Transition Stage
+          </div>
+          <div className="py-0.5 max-h-60 overflow-y-auto">
+            {availableStages.map((stg) => {
+              const stgConfig = STAGE_CONFIGS[stg.toUpperCase()] || {
+                label: stg,
+                dot: 'bg-slate-400',
+                text: 'text-slate-700',
+              };
+              const isSelected = stg === currentStage;
+              return (
+                <button
+                  key={stg}
+                  type="button"
+                  onClick={() => handleSelect(stg)}
+                  className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                    isSelected
+                      ? 'bg-slate-50 font-bold text-[var(--text-main)]'
+                      : 'font-medium text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 truncate mr-2">
+                    <span className={`w-2 h-2 rounded-full ${stgConfig.dot} shrink-0`} />
+                    <span className="truncate">{stgConfig.label}</span>
+                  </div>
+                  {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

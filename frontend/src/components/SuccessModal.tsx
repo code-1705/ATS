@@ -1,5 +1,6 @@
 import React from 'react';
-import { CheckCircle, RefreshCw, Copy, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle, Copy, Check, ArrowRight } from 'lucide-react';
 import type { ApplicationResponse } from '../types';
 
 interface SuccessModalProps {
@@ -9,6 +10,12 @@ interface SuccessModalProps {
 
 export const SuccessModal: React.FC<SuccessModalProps> = ({ application, onReset }) => {
   const [copied, setCopied] = React.useState(false);
+  const navigate = useNavigate();
+
+  const handleGoToApply = () => {
+    onReset();
+    navigate('/apply');
+  };
 
   const copyAppId = () => {
     navigator.clipboard.writeText(application.id);
@@ -70,15 +77,16 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({ application, onReset
 
         <div className="space-y-3 pt-2">
           <button
-            onClick={onReset}
+            type="button"
+            onClick={handleGoToApply}
             style={{
               backgroundColor: 'var(--primary, #da7756)',
               boxShadow: '0 2px 8px rgba(218, 119, 86, 0.25)',
             }}
-            className="w-full flex items-center justify-center py-3 px-4 rounded-xl text-white font-semibold hover:opacity-90 transition cursor-pointer"
+            className="w-full flex items-center justify-center py-3 px-4 rounded-xl text-white font-bold hover:opacity-95 transition cursor-pointer gap-2 shadow-xs"
           >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Submit Another Application
+            <span>Explore More Available Roles</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>
