@@ -120,40 +120,55 @@ def seed_admin_user() -> Dict[str, Any]:
     logger.info(f"Admin user {email} created successfully.")
     return insert_res.data[0]
 
-def seed_default_jobs() -> List[Dict[str, Any]]:
+def seed_default_jobs(force: bool = False) -> List[Dict[str, Any]]:
     """
-    Seeds the 10 initial jobs if the jobs table is empty.
+    Seeds the 10 initial jobs only if the jobs table is completely empty,
+    or if force=True.
+    Prevents deleted seed jobs from re-appearing when the total job count drops below 10.
     """
     supabase = get_supabase_client()
     response = supabase.table("jobs").select("id, title").execute()
     
-    if response.data and len(response.data) >= 10:
-        logger.info(f"Jobs table already contains {len(response.data)} jobs.")
+    if response.data and len(response.data) > 0 and not force:
+        logger.info(f"Jobs table already contains {len(response.data)} jobs. Skipping default job seeding.")
         return response.data
     
-    # If partial or empty, insert missing jobs
+    # If empty or forced, determine jobs to insert
     existing_titles = {j["title"] for j in (response.data or [])}
     jobs_to_insert = [job for job in DEFAULT_JOBS if job["title"] not in existing_titles]
     
-    if jobs_to_insert:
-        insert_res = supabase.table("jobs").insert(jobs_to_insert).execute()
-        if not insert_res.data or len(insert_res.data) == 0:
-            logger.error("Failed to insert default jobs into Supabase.")
-            raise RuntimeError("Failed to seed default jobs into database.")
-        logger.info(f"Seeded {len(jobs_to_insert)} new default jobs into Supabase.")
-        return (response.data or []) + insert_res.data
+    if not jobs_to_insert:
+        logger.info("All default jobs already exist in database.")
+        return response.data or []
     
-    return response.data or []
+    insert_res = supabase.table("jobs").insert(jobs_to_insert).execute()
+    if not insert_res.data or len(insert_res.data) == 0:
+        logger.error("Failed to insert default jobs into Supabase.")
+        raise RuntimeError("Failed to seed default jobs into database.")
+    logger.info(f"Seeded {len(jobs_to_insert)} new default jobs into Supabase.")
+    return (response.data or []) + insert_res.data
 
 
-def run_seed_bootstrap():
+def run_seed_bootstrap(force: bool = False):
     """
-    Entrypoint for bootstrapping the database on startup.
+    Entrypoint for bootstrapping the database on startup or via CLI.
     """
     try:
         admin = seed_admin_user()
-        jobs = seed_default_jobs()
+        jobs = seed_default_jobs(force=force)
         return {"status": "success", "admin": admin.get("email"), "jobs_count": len(jobs)}
     except Exception as e:
         logger.error(f"Error during Supabase seed bootstrap: {str(e)}")
         raise e
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Seed initial database users and jobs for EnterRecruit ATS.")
+    parser.add_argument("--force", action="store_true", help="Force insert missing default jobs even if jobs exist.")
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO)
+    logger.info(f"Starting EnterRecruit database seed (force={args.force})...")
+    res = run_seed_bootstrap(force=args.force)
+    logger.info(f"Database seed finished successfully: {res}")
