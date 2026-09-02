@@ -1,6 +1,7 @@
 import os
 import uuid
 import logging
+from typing import Optional
 import aiofiles
 from pathlib import Path
 from fastapi import UploadFile, HTTPException
@@ -75,3 +76,41 @@ async def save_resume_file(file: UploadFile) -> dict:
         "resume_url": resume_url,
         "local_path": str(local_path)
     }
+
+
+def delete_resume_file(resume_url: Optional[str], resume_filename: Optional[str] = None) -> bool:
+    """
+    Deletes a candidate's resume file from both the local filesystem and Supabase Storage.
+    Prevents orphaned files when jobs or applications are deleted.
+    """
+    deleted_local = False
+    deleted_remote = False
+
+    # 1. Clean up local file
+    if resume_url or resume_filename:
+        try:
+            target_filename = resume_filename or Path(resume_url or "").name
+            if target_filename:
+                base_dir = LOCAL_UPLOAD_DIR.resolve()
+                local_file = (base_dir / target_filename).resolve()
+                if local_file.parent == base_dir and local_file.is_file():
+                    local_file.unlink(missing_ok=True)
+                    deleted_local = True
+                    logger.info(f"Deleted local resume file: {local_file}")
+        except Exception as e:
+            logger.warning(f"Error deleting local resume file for '{resume_url}': {str(e)}")
+
+    # 2. Clean up Supabase Storage bucket
+    try:
+        target_name = resume_filename
+        if not target_name and resume_url:
+            target_name = Path(resume_url).name
+        if target_name:
+            supabase = get_supabase_client()
+            supabase.storage.from_("resumes").remove([target_name])
+            deleted_remote = True
+            logger.info(f"Removed '{target_name}' from Supabase Storage 'resumes' bucket")
+    except Exception as e:
+        logger.warning(f"Error removing resume from Supabase Storage: {str(e)}")
+
+    return deleted_local or deleted_remote
