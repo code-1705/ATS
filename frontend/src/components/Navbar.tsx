@@ -47,23 +47,11 @@ export const Navbar: React.FC<NavbarProps> = ({ activeJobsCount }) => {
 
         <div className="flex items-center space-x-4">
           {activeJobsCount !== undefined && activeJobsCount > 0 && (
-            <div className="hidden sm:flex items-center text-xs font-semibold text-[var(--text-muted)] bg-[var(--bg-card-hover)] border border-[var(--border-color)] px-3 py-1.5 rounded-full">
+            <div className="flex items-center text-xs font-semibold text-[var(--text-muted)] bg-[var(--bg-card-hover)] border border-[var(--border-color)] px-3 py-1.5 rounded-full shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
               {activeJobsCount} Partner Roles
             </div>
           )}
-
-          <Link
-            to="/#roles"
-            style={{
-              borderColor: 'var(--border-color, #e6e4dc)',
-              backgroundColor: 'var(--bg-card-hover, #faf9f6)',
-              color: 'var(--text-main, #24221f)',
-            }}
-            className="inline-flex items-center text-xs font-semibold hover:text-[var(--primary)] px-3.5 py-2 rounded-xl border transition no-underline shadow-xs"
-          >
-            Explore All Roles →
-          </Link>
         </div>
       </div>
     </header>
