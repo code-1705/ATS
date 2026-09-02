@@ -7,6 +7,7 @@ from typing import List, Optional
 from pathlib import Path
 from backend.core.supabase_client import get_supabase_client
 from backend.routers.auth import get_current_admin
+from backend.services.storage import delete_resume_file
 from backend.schemas.job import JobCreate, JobUpdate, JobResponse, JobListResponse
 from backend.schemas.application import (
     ApplicationResponse,
@@ -128,13 +129,41 @@ async def update_job(job_id: str, payload: JobUpdate):
 @router.delete("/jobs/{job_id}", status_code=status.HTTP_200_OK)
 async def delete_job(job_id: str):
     """
-    Deletes a job posting and its associated applications.
+    Deletes a job posting, removes associated candidate resume files from disk/storage,
+    and cascades deletion to associated applications.
     """
     supabase = get_supabase_client()
+
+    # 1. Verify job exists
+    job_res = supabase.table("jobs").select("id, title").eq("id", job_id).execute()
+    if not job_res.data or len(job_res.data) == 0:
+        raise HTTPException(status_code=404, detail="Job not found.")
+
+    # 2. Fetch associated candidate applications to clean up their resume files
+    apps_res = supabase.table("applications").select("id, resume_url, resume_filename").eq("job_id", job_id).execute()
+    apps_data = apps_res.data or []
+    cleaned_resumes_count = 0
+    for app in apps_data:
+        r_url = app.get("resume_url")
+        r_fn = app.get("resume_filename")
+        if r_url or r_fn:
+            if delete_resume_file(r_url, r_fn):
+                cleaned_resumes_count += 1
+
+    # 3. Delete job from database (PostgreSQL ON DELETE CASCADE deletes application records & logs)
     res = supabase.table("jobs").delete().eq("id", job_id).execute()
     if not res.data or len(res.data) == 0:
         raise HTTPException(status_code=404, detail="Job not found.")
-    return {"message": "Job deleted successfully.", "job_id": job_id}
+
+    logger.info(
+        f"Job {job_id} deleted. Cleaned {cleaned_resumes_count} resumes for {len(apps_data)} applications."
+    )
+    return {
+        "message": "Job deleted successfully.",
+        "job_id": job_id,
+        "deleted_applications_count": len(apps_data),
+        "cleaned_resumes_count": cleaned_resumes_count
+    }
 
 # ====================================================================
 # Candidate Applications & Stage Pipeline Endpoints

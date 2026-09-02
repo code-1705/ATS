@@ -109,4 +109,80 @@ def test_public_get_inactive_job_details_returns_404():
         assert "no longer active" in res.json()["detail"]
 
 
+def test_admin_delete_job_cleans_up_resumes():
+    mock_supabase = MagicMock()
+
+    # 1. Mock select job
+    job_exec = MagicMock()
+    job_exec.data = [MOCK_JOB]
+
+    # 2. Mock select applications for this job
+    apps_exec = MagicMock()
+    apps_exec.data = [
+        {"id": "app-1", "resume_url": "/uploads/resumes/resume_1.pdf", "resume_filename": "resume_1.pdf"},
+        {"id": "app-2", "resume_url": "/uploads/resumes/resume_2.pdf", "resume_filename": "resume_2.pdf"},
+    ]
+
+    # 3. Mock delete job
+    delete_exec = MagicMock()
+    delete_exec.data = [MOCK_JOB]
+
+    def mock_table(table_name):
+        mock_t = MagicMock()
+        if table_name == "jobs":
+            # select().eq().execute() -> job_exec
+            mock_t.select.return_value.eq.return_value.execute.return_value = job_exec
+            # delete().eq().execute() -> delete_exec
+            mock_t.delete.return_value.eq.return_value.execute.return_value = delete_exec
+        elif table_name == "applications":
+            mock_t.select.return_value.eq.return_value.execute.return_value = apps_exec
+        return mock_t
+
+    mock_supabase.table.side_effect = mock_table
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase), \
+         patch("backend.routers.admin.delete_resume_file", return_value=True) as mock_delete_file:
+        res = client.delete(f"/api/admin/jobs/{MOCK_JOB['id']}", headers=auth_headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["job_id"] == MOCK_JOB["id"]
+        assert data["deleted_applications_count"] == 2
+        assert data["cleaned_resumes_count"] == 2
+        assert mock_delete_file.call_count == 2
+
+
+def test_admin_delete_job_not_found_returns_404():
+    mock_supabase = MagicMock()
+    empty_exec = MagicMock()
+    empty_exec.data = []
+    mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = empty_exec
+
+    with patch("backend.routers.admin.get_supabase_client", return_value=mock_supabase):
+        res = client.delete(f"/api/admin/jobs/{MOCK_JOB['id']}", headers=auth_headers)
+        assert res.status_code == 404
+        assert "Job not found" in res.json()["detail"]
+
+
+def test_storage_delete_resume_file_local_and_supabase(tmp_path):
+    from backend.services.storage import delete_resume_file, LOCAL_UPLOAD_DIR
+    mock_supabase = MagicMock()
+
+    # Create dummy local file
+    test_dir = tmp_path / "uploads" / "resumes"
+    test_dir.mkdir(parents=True, exist_ok=True)
+    test_file = test_dir / "resume_test123.pdf"
+    test_file.write_bytes(b"dummy resume content")
+    assert test_file.exists()
+
+    with patch("backend.services.storage.LOCAL_UPLOAD_DIR", test_dir), \
+         patch("backend.services.storage.get_supabase_client", return_value=mock_supabase):
+        res = delete_resume_file(
+            resume_url=f"uploads/resumes/{test_file.name}",
+            resume_filename=test_file.name
+        )
+        assert res is True
+        assert not test_file.exists()
+        mock_supabase.storage.from_.return_value.remove.assert_called_once_with([test_file.name])
+
+
 
