@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -21,7 +22,8 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting EnterRecruit API Server...")
     try:
-        bootstrap_result = run_seed_bootstrap()
+        loop = asyncio.get_running_loop()
+        bootstrap_result = await loop.run_in_executor(None, run_seed_bootstrap)
         logger.info(f"Database bootstrap status: {bootstrap_result}")
     except Exception as e:
         logger.warning(f"Supabase connection/seed skipped or offline during startup: {str(e)}")

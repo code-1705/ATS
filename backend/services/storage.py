@@ -11,7 +11,6 @@ logger = logging.getLogger("enterrecruit.storage")
 ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 LOCAL_UPLOAD_DIR = Path("uploads/resumes")
-LOCAL_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 async def save_resume_file(file: UploadFile) -> dict:
     """
@@ -47,6 +46,7 @@ async def save_resume_file(file: UploadFile) -> dict:
     local_path = LOCAL_UPLOAD_DIR / safe_filename
 
     # Save to local filesystem as dependable storage
+    LOCAL_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     async with aiofiles.open(local_path, "wb") as f:
         await f.write(content)
 
