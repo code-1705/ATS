@@ -11,7 +11,7 @@ from backend.core.config import settings
 logger = logging.getLogger("enterrecruit.storage")
 ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
-LOCAL_UPLOAD_DIR = Path("uploads/resumes")
+LOCAL_UPLOAD_DIR = Path("/tmp/uploads/resumes") if os.environ.get("VERCEL") else Path("uploads/resumes")
 
 async def save_resume_file(file: UploadFile) -> dict:
     """

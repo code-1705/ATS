@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 from contextlib import asynccontextmanager
@@ -21,9 +22,12 @@ async def lifespan(app: FastAPI):
     Application lifespan: auto-bootstraps admin and 10 default jobs on startup if needed.
     """
     logger.info("Starting EnterRecruit API Server...")
-    # Ensure local upload directories exist on startup
-    upload_dir = Path("uploads/resumes")
-    upload_dir.mkdir(parents=True, exist_ok=True)
+    # Ensure local upload directories exist on startup if writable (skip on read-only serverless)
+    try:
+        upload_dir = Path("/tmp/uploads/resumes") if os.environ.get("VERCEL") else Path("uploads/resumes")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        logger.warning(f"Could not create local upload directory (serverless environment): {e}")
 
     try:
         loop = asyncio.get_running_loop()
