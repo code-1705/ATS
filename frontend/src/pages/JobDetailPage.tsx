@@ -254,10 +254,24 @@ export const JobDetailPage: React.FC<JobDetailPageProps> = ({ user }) => {
                 </span>
 
                 {meta?.companyName && (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--text-main)] bg-[var(--bg-card-hover)] px-3 py-1 rounded-full border border-[var(--border-color)] shadow-2xs">
-                    <Building2 className="w-3.5 h-3.5 text-[var(--primary)]" />
-                    <span>{meta.companyName}</span>
-                  </span>
+                  meta.companyWebsite ? (
+                    <a
+                      href={meta.companyWebsite}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--text-main)] bg-[var(--bg-card-hover)] px-3 py-1 rounded-full border border-[var(--border-color)] shadow-2xs hover:border-[var(--primary)] transition"
+                      title={`Visit ${meta.companyName} website`}
+                    >
+                      <Building2 className="w-3.5 h-3.5 text-[var(--primary)]" />
+                      <span>{meta.companyName}</span>
+                      <ExternalLink className="w-3 h-3 text-[var(--text-dim)]" />
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--text-main)] bg-[var(--bg-card-hover)] px-3 py-1 rounded-full border border-[var(--border-color)] shadow-2xs">
+                      <Building2 className="w-3.5 h-3.5 text-[var(--primary)]" />
+                      <span>{meta.companyName}</span>
+                    </span>
+                  )
                 )}
 
                 <button
