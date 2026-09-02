@@ -13,10 +13,9 @@ import type {
 
 
 const TOKEN_KEY = 'ats_auth_token';
-const LEGACY_TOKEN_KEY = 'enterrecruit_token';
 
 export const getStoredToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY);
+  return localStorage.getItem(TOKEN_KEY);
 };
 
 const adminClient = axios.create({
@@ -38,7 +37,6 @@ adminClient.interceptors.request.use((config) => {
 // Auth Helpers
 export const setAuthToken = (token: string) => {
   localStorage.setItem(TOKEN_KEY, token);
-  localStorage.removeItem(LEGACY_TOKEN_KEY);
 };
 
 export const getAuthToken = (): string | null => {
@@ -47,7 +45,6 @@ export const getAuthToken = (): string | null => {
 
 export const clearAuthToken = () => {
   localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(LEGACY_TOKEN_KEY);
 };
 
 export const isAuthenticated = (): boolean => {

@@ -26,7 +26,7 @@ from backend.models.stages import (
 )
 
 
-logger = logging.getLogger("enterrecruit.admin")
+logger = logging.getLogger("ats.admin")
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard & Management"], dependencies=[Depends(get_current_admin)])
 
 

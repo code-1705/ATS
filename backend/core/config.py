@@ -9,7 +9,7 @@ load_dotenv()
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(".env", "backend/.env"), extra="allow")
 
-    PROJECT_NAME: str = "EnterRecruit API"
+    PROJECT_NAME: str = "Careers Hub API"
     VERSION: str = "1.0.0"
     API_V1_PREFIX: str = "/api"
 
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = "mock-service-role-key"
 
     # JWT Authentication
-    JWT_SECRET_KEY: str = "enterrecruit-default-insecure-dev-jwt-secret-key-32-chars"
+    JWT_SECRET_KEY: str = "ats-default-insecure-dev-jwt-secret-key-32-chars"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 

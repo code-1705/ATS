@@ -8,7 +8,7 @@ from backend.core.security import (
 )
 
 def test_settings_defaults():
-    assert settings.PROJECT_NAME == "EnterRecruit API"
+    assert settings.PROJECT_NAME == "Careers Hub API"
     assert settings.ADMIN_DEFAULT_EMAIL == "admin@enter.in"
     assert settings.ACCESS_TOKEN_EXPIRE_MINUTES >= 60
     assert len(settings.JWT_SECRET_KEY) >= 32

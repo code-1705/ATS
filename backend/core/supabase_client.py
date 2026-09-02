@@ -4,7 +4,7 @@ from typing import Optional
 from supabase import create_client, Client
 from backend.core.config import settings
 
-logger = logging.getLogger("enterrecruit.supabase")
+logger = logging.getLogger("ats.supabase")
 
 _supabase_client: Optional[Client] = None
 _client_lock = threading.Lock()

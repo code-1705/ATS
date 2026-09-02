@@ -14,14 +14,14 @@ from backend.routers import auth, public, admin
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger = logging.getLogger("enterrecruit.app")
+logger = logging.getLogger("ats.app")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Application lifespan: auto-bootstraps admin and 10 default jobs on startup if needed.
+    Application lifespan: auto-bootstraps admin and default jobs on startup if needed.
     """
-    logger.info("Starting EnterRecruit API Server...")
+    logger.info("Starting ATS API Server...")
     # Ensure local upload directories exist on startup if writable (skip on read-only serverless)
     try:
         upload_dir = Path("/tmp/uploads/resumes") if os.environ.get("VERCEL") else Path("uploads/resumes")
@@ -37,13 +37,13 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Supabase connection/seed skipped or offline during startup: {str(e)}")
     
     yield
-    logger.info("EnterRecruit API Server shutdown.")
+    logger.info("ATS API Server shutdown.")
 
 # Create FastAPI application
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Enterprise-grade AI Candidate Application & Recruitment Management System Backend.",
+    description="Enterprise-grade Candidate Application & Recruitment Management System Backend.",
     lifespan=lifespan
 )
 

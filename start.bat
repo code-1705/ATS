@@ -1,10 +1,10 @@
 @echo off
 echo ===================================================
-echo Starting EnterRecruit Full-Stack Application...
+echo Starting Careers Hub Full-Stack Application...
 echo ===================================================
 
-start "EnterRecruit Backend (FastAPI)" cmd /k "uvicorn backend.app:app --reload --port 8000"
-start "EnterRecruit Frontend (Vite)" cmd /k "cd frontend && npm run dev"
+start "Careers Hub Backend (FastAPI)" cmd /k "uvicorn backend.app:app --reload --port 8000"
+start "Careers Hub Frontend (Vite)" cmd /k "cd frontend && npm run dev"
 
 echo.
 echo Application launched!

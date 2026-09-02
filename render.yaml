@@ -1,6 +1,6 @@
-﻿services:
+services:
   - type: web
-    name: enterrecruit-ats
+    name: talent-careers-ats
     env: python
     region: oregon
     plan: free

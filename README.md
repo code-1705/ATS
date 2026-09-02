@@ -1,4 +1,4 @@
-﻿# EnterRecruit — Candidate Application & Recruitment Management System
+# Careers Hub — Candidate Application & Recruitment Management System
 
 [![Tests](https://img.shields.io/badge/pytest-21%20passed-emerald)](https://github.com/code-1705/ATS)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -7,7 +7,7 @@
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791.svg?logo=postgresql&logoColor=white)](https://supabase.com)
 
-**EnterRecruit** is an enterprise-grade, high-performance Candidate Application and Recruitment Management System designed for speed, usability, and clean architecture.
+**Careers Hub** is an enterprise-grade, high-performance Candidate Application and Recruitment Management System designed for speed, usability, and clean architecture.
 
 ---
 
@@ -15,10 +15,10 @@
 
 | Resource | URL / Access Link |
 | :--- | :--- |
-| **Public Candidate Application Portal** | [https://enterrecruit-ats.onrender.com/](https://enterrecruit-ats.onrender.com/) or [`/apply`](https://enterrecruit-ats.onrender.com/apply) |
-| **Direct Single-Job Apply Route** | [`/jobs/:job_id/apply`](https://enterrecruit-ats.onrender.com/jobs/job-id/apply) |
-| **Admin Dashboard** | [https://enterrecruit-ats.onrender.com/admin](https://enterrecruit-ats.onrender.com/admin) |
-| **Interactive OpenAPI Docs** | [https://enterrecruit-ats.onrender.com/docs](https://enterrecruit-ats.onrender.com/docs) |
+| **Public Candidate Application Portal** | [https://enterrecruit.vercel.app/](https://enterrecruit.vercel.app/) or [`/apply`](https://enterrecruit.vercel.app/apply) |
+| **Direct Single-Job Apply Route** | [`/jobs/:job_id/apply`](https://enterrecruit.vercel.app/jobs/job-id/apply) |
+| **Admin Dashboard** | [https://enterrecruit.vercel.app/admin](https://enterrecruit.vercel.app/admin) |
+| **Interactive OpenAPI Docs** | [https://enterrecruit.vercel.app/api/health](https://enterrecruit.vercel.app/api/health) |
 
 ### 🔑 Admin Demo Credentials
 - **Email**: `admin@enter.in`
@@ -180,6 +180,6 @@ Output:
 
 ### Option 2: Docker Container
 ```bash
-docker build -t enterrecruit:latest .
-docker run -p 8000:8000 enterrecruit:latest
+docker build -t careers-hub-ats:latest .
+docker run -p 8000:8000 careers-hub-ats:latest
 ```

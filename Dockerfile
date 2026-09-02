@@ -1,5 +1,5 @@
-﻿# ====================================================================
-# EnterRecruit Production Multi-Stage Dockerfile
+# ====================================================================
+# Careers Hub ATS Production Multi-Stage Dockerfile
 # ====================================================================
 
 # Stage 1: Build Frontend SPA

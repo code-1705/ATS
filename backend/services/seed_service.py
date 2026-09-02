@@ -4,7 +4,7 @@ from backend.core.config import settings
 from backend.core.security import get_password_hash
 from backend.core.supabase_client import get_supabase_client
 
-logger = logging.getLogger("enterrecruit.seed")
+logger = logging.getLogger("ats.seed")
 
 DEFAULT_JOBS: List[Dict[str, Any]] = [
     {
@@ -164,11 +164,11 @@ def run_seed_bootstrap(force: bool = False):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Seed initial database users and jobs for EnterRecruit ATS.")
+    parser = argparse.ArgumentParser(description="Seed initial database users and jobs for Talent ATS.")
     parser.add_argument("--force", action="store_true", help="Force insert missing default jobs even if jobs exist.")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
-    logger.info(f"Starting EnterRecruit database seed (force={args.force})...")
+    logger.info(f"Starting Talent ATS database seed (force={args.force})...")
     res = run_seed_bootstrap(force=args.force)
     logger.info(f"Database seed finished successfully: {res}")

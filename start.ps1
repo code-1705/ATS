@@ -1,6 +1,6 @@
-﻿# EnterRecruit Local Startup Script (PowerShell)
+# Careers Hub Local Startup Script (PowerShell)
 Write-Host "===================================================" -ForegroundColor Cyan
-Write-Host "Starting EnterRecruit Full-Stack Application..." -ForegroundColor Cyan
+Write-Host "Starting Careers Hub Full-Stack Application..." -ForegroundColor Cyan
 Write-Host "===================================================" -ForegroundColor Cyan
 
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "uvicorn backend.app:app --reload --port 8000"
