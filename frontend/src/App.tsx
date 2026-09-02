@@ -1,5 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { LandingPage } from './pages/LandingPage';
 import { ApplyPage } from './pages/ApplyPage';
 import { DirectJobApplyPage } from './pages/DirectJobApplyPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
@@ -11,7 +12,7 @@ export const App: React.FC = () => {
     <BrowserRouter>
       <Routes>
         {/* Candidate Public Application Routes */}
-        <Route path="/" element={<ApplyPage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/apply" element={<ApplyPage />} />
         <Route path="/jobs/:job_id/apply" element={<DirectJobApplyPage />} />
 

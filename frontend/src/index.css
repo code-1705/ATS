@@ -1,14 +1,89 @@
-﻿@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  color-scheme: light;
+  /* Claude-inspired Beige Theme from ResolveAI */
+  --bg-dark: #f2f0e9;       /* Main beige background */
+  --bg-card: #ffffff;       /* Pure white for cards */
+  --bg-card-hover: #faf9f6; /* Off-white hover */
+  --border-color: #e6e4dc;  /* Soft border */
+
+  --primary: #da7756;       /* Claude auburn accent */
+  --primary-hover: #c46445;
+  --indigo: #5d574e;        /* Dark stone accent */
+
+  --text-main: #24221f;     /* Almost black / warm charcoal */
+  --text-muted: #666560;    /* Muted warm gray */
+  --text-dim: #9c9a93;      /* Dimmer gray */
+
+  --success: #378b59;       /* Soft green */
+  --success-bg: #eaf3ed;
+  --warning: #d97706;       /* Soft orange */
+  --warning-bg: #fdf3e6;
+  --danger: #c44336;        /* Soft red */
+  --danger-bg: #faeaea;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, .brand-font {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+/* Minimalist Card utility from ResolveAI */
+.glass-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.glass-panel:hover {
+  border-color: #dcdad0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #dcdad0;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c5c3b9;
+}
+
+/* Live Indicator pulse */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.live-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: var(--success);
+  border-radius: 50%;
+  animation: pulseGlow 2s infinite ease-in-out;
 }
