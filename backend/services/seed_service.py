@@ -12,7 +12,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "Engineering",
         "location": "Remote / Hybrid (Bangalore)",
         "job_type": "Full-Time",
-        "description": "Lead core architecture across React frontend and high-throughput FastAPI microservices. Build enterprise recruitment workflows and real-time dashboard analytics.",
+        "description": "[METADATA]\nCompany: Ramp\nCompanyWebsite: https://ramp.com\nStartDate: 2026-09-01\nEndDate: 2026-10-31\nSkills: React 18, TypeScript, FastAPI, Python, PostgreSQL, Redis, Microservices\nSalary: $145,000 - $185,000 / year\nExperience: Senior (5+ years)\nWorkplace: Hybrid\n[END_METADATA]\n\nLead core architecture across React frontend and high-throughput FastAPI microservices. Build enterprise recruitment workflows, state management pipelines, and real-time dashboard analytics with high availability.",
         "is_active": True
     },
     {
@@ -20,7 +20,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "AI & Intelligence",
         "location": "Remote",
         "job_type": "Full-Time",
-        "description": "Design LLM agent prompt topologies, resume semantic matchers, audio transcription pipelines, and adaptive technical interview rubrics.",
+        "description": "[METADATA]\nCompany: Anthropic\nCompanyWebsite: https://anthropic.com\nStartDate: 2026-09-01\nEndDate: 2026-11-15\nSkills: Python, PyTorch, LangChain, Multi-Agent Systems, Vector DBs, LLM Finetuning\nSalary: $160,000 - $210,000 / year\nExperience: Senior (5+ years)\nWorkplace: Remote\n[END_METADATA]\n\nDesign LLM agent prompt topologies, resume semantic matchers, audio transcription pipelines, and adaptive technical interview rubrics with deterministic evaluation guardrails.",
         "is_active": True
     },
     {
@@ -28,7 +28,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "Engineering",
         "location": "Bangalore, India",
         "job_type": "Full-Time",
-        "description": "Craft responsive, accessible, high-performance web applications using React 18, TypeScript, TailwindCSS, and TanStack Query.",
+        "description": "[METADATA]\nCompany: Vercel\nCompanyWebsite: https://vercel.com\nStartDate: 2026-09-01\nEndDate: 2026-10-15\nSkills: React 18, Next.js, TypeScript, TailwindCSS, TanStack Query, Web Performance\nSalary: $120,000 - $155,000 / year\nExperience: Mid-Level (3+ years)\nWorkplace: Remote\n[END_METADATA]\n\nCraft responsive, accessible, high-performance web applications using React 18, TypeScript, TailwindCSS, and TanStack Query. Collaborate with product design to build fluid user journeys.",
         "is_active": True
     },
     {
@@ -36,7 +36,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "Engineering",
         "location": "Remote",
         "job_type": "Full-Time",
-        "description": "Build resilient REST APIs, asynchronous task workers, webhook ingestion engines, and database access layers on PostgreSQL.",
+        "description": "[METADATA]\nCompany: Stripe\nCompanyWebsite: https://stripe.com\nStartDate: 2026-09-01\nEndDate: 2026-10-30\nSkills: Python, FastAPI, Kafka, Distributed Systems, PostgreSQL, Docker, AsyncIO\nSalary: $150,000 - $190,000 / year\nExperience: Senior (5+ years)\nWorkplace: Remote\n[END_METADATA]\n\nBuild resilient REST APIs, asynchronous task workers, webhook ingestion engines, and database access layers on PostgreSQL with strict zero-downtime requirements.",
         "is_active": True
     },
     {
@@ -44,7 +44,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "Design",
         "location": "Remote",
         "job_type": "Full-Time",
-        "description": "Create intuitive candidate application experiences, ATS Kanban pipelines, design systems, and rich interactive hiring dashboards in Figma.",
+        "description": "[METADATA]\nCompany: Figma\nCompanyWebsite: https://figma.com\nStartDate: 2026-09-01\nEndDate: 2026-11-01\nSkills: Figma, Design Systems, UX Research, Interaction Design, Prototyping, Mobile Web\nSalary: $140,000 - $175,000 / year\nExperience: Lead (6+ years)\nWorkplace: Remote\n[END_METADATA]\n\nCreate intuitive candidate application experiences, ATS Kanban pipelines, design systems, and rich interactive hiring dashboards in Figma with pixel-level precision.",
         "is_active": True
     },
     {
@@ -52,7 +52,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "Product",
         "location": "Remote / Hybrid",
         "job_type": "Full-Time",
-        "description": "Define product roadmaps, user stories, hiring metrics, and customer feedback loops for modern talent intelligence platforms.",
+        "description": "[METADATA]\nCompany: Notion\nCompanyWebsite: https://notion.so\nStartDate: 2026-09-01\nEndDate: 2026-10-31\nSkills: Product Strategy, User Research, SaaS Metrics, Agile Roadmapping, Enterprise Growth\nSalary: $135,000 - $170,000 / year\nExperience: Senior (4+ years)\nWorkplace: Hybrid\n[END_METADATA]\n\nDefine product roadmaps, user stories, hiring metrics, and customer feedback loops for modern talent intelligence platforms. Partner directly with engineering leadership.",
         "is_active": True
     },
     {
@@ -60,7 +60,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "Infrastructure",
         "location": "Remote",
         "job_type": "Full-Time",
-        "description": "Automate CI/CD pipelines, Docker container orchestration, cloud security posture, and zero-downtime deployment pipelines.",
+        "description": "[METADATA]\nCompany: Datadog\nCompanyWebsite: https://datadoghq.com\nStartDate: 2026-09-01\nEndDate: 2026-11-30\nSkills: AWS, Kubernetes, Terraform, Docker, CI/CD, Prometheus, Zero-Downtime Deployments\nSalary: $130,000 - $165,000 / year\nExperience: Mid-Senior (4+ years)\nWorkplace: Remote\n[END_METADATA]\n\nAutomate CI/CD pipelines, Docker container orchestration, cloud security posture, and zero-downtime deployment pipelines across AWS and Kubernetes environments.",
         "is_active": True
     },
     {
@@ -68,7 +68,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "Human Resources",
         "location": "Bangalore, India",
         "job_type": "Full-Time",
-        "description": "Source top-tier engineering talent, conduct initial screening evaluations, coordinate multi-stage interview loops, and drive offer closures.",
+        "description": "[METADATA]\nCompany: Scale AI\nCompanyWebsite: https://scale.com\nStartDate: 2026-09-01\nEndDate: 2026-10-31\nSkills: Technical Sourcing, Candidate Pipeline, Offer Negotiation, ATS Systems, Engineering Hiring\nSalary: $95,000 - $125,000 / year\nExperience: Mid-Level (3+ years)\nWorkplace: Hybrid\n[END_METADATA]\n\nSource top-tier engineering talent, conduct initial screening evaluations, coordinate multi-stage interview loops, and drive offer closures with executive founders.",
         "is_active": True
     },
     {
@@ -76,7 +76,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "Operations",
         "location": "Remote",
         "job_type": "Full-Time",
-        "description": "Guide enterprise talent acquisition teams through seamless platform onboarding, training, and ongoing workflow optimization.",
+        "description": "[METADATA]\nCompany: Linear\nCompanyWebsite: https://linear.app\nStartDate: 2026-09-01\nEndDate: 2026-10-15\nSkills: Client Onboarding, Account Management, Enterprise Support, SaaS Training, Customer Retention\nSalary: $85,000 - $115,000 / year\nExperience: Mid-Level (2+ years)\nWorkplace: Remote\n[END_METADATA]\n\nGuide enterprise talent acquisition teams through seamless platform onboarding, training, and ongoing workflow optimization to maximize retention and engagement.",
         "is_active": True
     },
     {
@@ -84,7 +84,7 @@ DEFAULT_JOBS: List[Dict[str, Any]] = [
         "department": "Engineering",
         "location": "Remote",
         "job_type": "Full-Time",
-        "description": "Develop comprehensive automated test suites using pytest, Playwright, and Postman to ensure zero regression across web and API layers.",
+        "description": "[METADATA]\nCompany: Postman\nCompanyWebsite: https://postman.com\nStartDate: 2026-09-01\nEndDate: 2026-11-15\nSkills: Pytest, Playwright, API Testing, Postman, CI Automation, End-to-End Testing\nSalary: $110,000 - $140,000 / year\nExperience: Mid-Level (3+ years)\nWorkplace: Remote\n[END_METADATA]\n\nDevelop comprehensive automated test suites using pytest, Playwright, and Postman to ensure zero regression across web and API layers for mission-critical recruitment.",
         "is_active": True
     }
 ]

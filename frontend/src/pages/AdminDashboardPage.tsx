@@ -186,18 +186,24 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 space-y-6">
         {/* Metric Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Candidates</span>
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[var(--border-color)] shadow-xs space-y-1">
+            <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Total Candidates</span>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-extrabold text-slate-900">{stats.total_candidates}</span>
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <span className="text-2xl font-extrabold text-[var(--text-main)]">{stats.total_candidates}</span>
+              <div
+                style={{
+                  backgroundColor: 'rgba(218, 119, 86, 0.12)',
+                  color: 'var(--primary, #da7756)',
+                }}
+                className="w-8 h-8 rounded-xl flex items-center justify-center font-bold"
+              >
                 <Users className="w-4 h-4" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">In Active Review</span>
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[var(--border-color)] shadow-xs space-y-1">
+            <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">In Active Review</span>
             <div className="flex items-center justify-between">
               <span className="text-2xl font-extrabold text-blue-600">{stats.in_review}</span>
               <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -206,8 +212,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
             </div>
           </div>
 
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Approved / Hired</span>
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[var(--border-color)] shadow-xs space-y-1">
+            <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Approved / Hired</span>
             <div className="flex items-center justify-between">
               <span className="text-2xl font-extrabold text-emerald-600">{stats.approved}</span>
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -216,8 +222,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
             </div>
           </div>
 
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Rejected</span>
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[var(--border-color)] shadow-xs space-y-1">
+            <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Rejected</span>
             <div className="flex items-center justify-between">
               <span className="text-2xl font-extrabold text-rose-600">{stats.rejected}</span>
               <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
@@ -227,12 +233,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
           </div>
         </div>
 
-
         {/* Tab 1: Candidate Applications Pipeline */}
         {activeTab === 'candidates' && (
           <div className="space-y-4">
             {/* Filter Controls Bar */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
+            <div className="bg-white p-5 rounded-2xl border border-[var(--border-color)] shadow-xs space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 {/* Search Input */}
                 <div className="relative flex-1 max-w-md">
@@ -241,18 +246,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
                     placeholder="Search candidate by name, email, or phone..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 pl-10 text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    className="w-full bg-[var(--bg-card-hover)] border border-[var(--border-color)] rounded-xl px-3.5 py-2.5 pl-10 text-xs text-[var(--text-main)] placeholder-[var(--text-dim)] focus:outline-hidden focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition"
                   />
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  <Search className="w-4 h-4 text-[var(--text-dim)] absolute left-3.5 top-3" />
                 </div>
 
                 {/* Job Filter Dropdown */}
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs font-semibold text-slate-600 shrink-0">Filter by Job:</span>
+                  <span className="text-xs font-semibold text-[var(--text-muted)] shrink-0">Filter by Job:</span>
                   <select
                     value={selectedJobFilter}
                     onChange={(e) => setSelectedJobFilter(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[200px]"
+                    className="bg-[var(--bg-card-hover)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-xs text-[var(--text-main)] focus:outline-hidden focus:ring-2 focus:ring-[var(--primary)] cursor-pointer min-w-[200px]"
                   >
                     <option value="ALL">All Jobs ({jobs.length} Positions)</option>
                     {jobs.map((job) => (
@@ -265,8 +270,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
               </div>
 
               {/* Stage Filter Chips */}
-              <div className="pt-3 border-t border-slate-100 flex items-center space-x-2 overflow-x-auto pb-1">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center mr-1">
+              <div className="pt-3 border-t border-[var(--border-color)] flex items-center space-x-2 overflow-x-auto pb-1">
+                <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider shrink-0 flex items-center mr-1">
                   <Filter className="w-3 h-3 mr-1" /> Stage:
                 </span>
                 {STAGE_FILTERS.map((stg) => {
@@ -275,10 +280,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ user }) 
                     <button
                       key={stg.key}
                       onClick={() => setSelectedStageFilter(stg.key)}
+                      style={
+                        isSelected
+                          ? { backgroundColor: 'var(--primary, #da7756)', color: '#FFFFFF' }
+                          : undefined
+                      }
                       className={`text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap cursor-pointer ${
                         isSelected
-                          ? 'bg-indigo-600 text-white shadow-2xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'shadow-xs'
+                          : 'bg-[var(--bg-card-hover)] text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-color)]'
                       }`}
                     >
                       {stg.label}

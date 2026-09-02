@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import type { Job } from '../types';
 import { ChevronDown } from 'lucide-react';
 
@@ -19,7 +19,7 @@ export const JobSelectorDropdown: React.FC<JobSelectorDropdownProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-semibold text-slate-800">
+      <label className="block text-sm font-semibold text-[var(--text-main)]">
         Position Applied For <span className="text-rose-500">*</span>
       </label>
       <div className="relative">
@@ -27,8 +27,8 @@ export const JobSelectorDropdown: React.FC<JobSelectorDropdownProps> = ({
           value={selectedJobId}
           disabled={disabled}
           onChange={(e) => onSelectJob(e.target.value)}
-          className={`w-full appearance-none bg-white border rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition pr-10 cursor-pointer disabled:bg-slate-100 disabled:cursor-not-allowed ${
-            error ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-300'
+          className={`w-full appearance-none bg-[var(--bg-card-hover)] border rounded-xl px-4 py-3 text-sm text-[var(--text-main)] focus:outline-hidden focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition pr-10 cursor-pointer disabled:bg-slate-100 disabled:cursor-not-allowed ${
+            error ? 'border-rose-300 ring-1 ring-rose-300' : 'border-[var(--border-color)]'
           }`}
         >
           <option value="" disabled>-- Select a Job from Open Roles ({jobs.length} Available) --</option>
@@ -38,7 +38,7 @@ export const JobSelectorDropdown: React.FC<JobSelectorDropdownProps> = ({
             </option>
           ))}
         </select>
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[var(--text-dim)]">
           <ChevronDown className="w-5 h-5" />
         </div>
       </div>

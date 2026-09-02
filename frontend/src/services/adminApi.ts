@@ -12,7 +12,12 @@ import type {
 } from '../types';
 
 
-const TOKEN_KEY = 'enterrecruit_token';
+const TOKEN_KEY = 'ats_auth_token';
+const LEGACY_TOKEN_KEY = 'enterrecruit_token';
+
+export const getStoredToken = (): string | null => {
+  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY);
+};
 
 const adminClient = axios.create({
   baseURL: '/api',
@@ -23,7 +28,7 @@ const adminClient = axios.create({
 
 // Auto-inject JWT token if present
 adminClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token = getStoredToken();
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -33,18 +38,20 @@ adminClient.interceptors.request.use((config) => {
 // Auth Helpers
 export const setAuthToken = (token: string) => {
   localStorage.setItem(TOKEN_KEY, token);
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
 };
 
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY);
+  return getStoredToken();
 };
 
 export const clearAuthToken = () => {
   localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
 };
 
 export const isAuthenticated = (): boolean => {
-  return !!localStorage.getItem(TOKEN_KEY);
+  return !!getStoredToken();
 };
 
 export const getResumeDownloadUrl = (applicationId: string): string => {

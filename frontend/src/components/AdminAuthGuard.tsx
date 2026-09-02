@@ -36,8 +36,11 @@ export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
+      <div className="min-h-screen bg-[var(--bg-dark)] flex flex-col items-center justify-center text-[var(--text-muted)]">
+        <Loader2
+          style={{ color: 'var(--primary, #da7756)' }}
+          className="w-8 h-8 animate-spin mb-3"
+        />
         <p className="text-sm font-medium">Verifying admin session...</p>
       </div>
     );

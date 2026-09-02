@@ -6,21 +6,21 @@ import type { Job } from '../types';
 import {
   MapPin,
   Briefcase,
+  Building2,
   Clock,
-  ShieldCheck,
   CheckCircle2,
   Cpu,
-  Layers,
-  Search,
   ArrowRight,
   ExternalLink,
   Loader2,
-  Lock,
   Zap,
   ChevronDown,
   Sparkles,
-  Calculator,
+  Compass,
+  Users,
+  Award,
 } from 'lucide-react';
+import { parseJobDescription } from '../utils/jobMetadata';
 
 interface CandidatePreset {
   id: string;
@@ -97,19 +97,26 @@ export const LandingPage: React.FC = () => {
   // Jobs & filters state
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loadingJobs, setLoadingJobs] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedDepartment, setSelectedDepartment] = useState<string>('ALL');
+  // Only 3 most recently created jobs
+  const recentJobs = useMemo(() => {
+    const sorted = [...jobs].sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return dateB - dateA;
+    });
+    return sorted.slice(0, 3);
+  }, [jobs]);
 
   // Interactive Simulator preset state
   const [activePresetKey, setActivePresetKey] = useState<string>('architect');
   const activePreset = CANDIDATE_PRESETS[activePresetKey];
 
-  // Interactive ROI Calculator state
-  const [monthlyApplicants, setMonthlyApplicants] = useState<number>(350);
-  const [manualScreeningDays, setManualScreeningDays] = useState<number>(24);
-
   // FAQ Accordion state
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  const toggleFaq = (index: number) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
 
   const loadJobs = useCallback(async () => {
     setLoadingJobs(true);
@@ -127,60 +134,26 @@ export const LandingPage: React.FC = () => {
     loadJobs();
   }, [loadJobs]);
 
-  // Extract unique departments
-  const departments = useMemo(() => {
-    const deps = new Set<string>();
-    jobs.forEach((j) => {
-      if (j.department) deps.add(j.department);
-    });
-    return ['ALL', ...Array.from(deps)];
-  }, [jobs]);
-
-  // Filtered jobs
-  const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
-      const matchesSearch =
-        !searchQuery.trim() ||
-        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesDepartment =
-        selectedDepartment === 'ALL' || job.department === selectedDepartment;
-
-      return matchesSearch && matchesDepartment;
-    });
-  }, [jobs, searchQuery, selectedDepartment]);
-
-  // ROI calculations
-  const hoursSavedPerMonth = Math.round(monthlyApplicants * 0.45);
-  const costSavingsDollars = Math.round(hoursSavedPerMonth * 48);
-  const timeToOfferReductionDays = Math.round(manualScreeningDays * 0.62);
-
-  const toggleFaq = (index: number) => {
-    setOpenFaqIndex(openFaqIndex === index ? null : index);
-  };
-
   const faqs = [
     {
-      q: 'How does EnterRecruit differ from legacy Applicant Tracking Systems?',
-      a: 'Legacy ATS platforms rely on brittle keyword matching that misses high-caliber non-traditional candidates and lets resume-stuffers slip through. EnterRecruit applies semantic evaluation across skill taxonomies, past project scope, and multi-criteria rubrics while isolating all PII behind signed URLs.',
+      q: 'Are these jobs for your company or at client partner companies?',
+      a: 'These openings are hosted on behalf of our diverse client companies—ranging from high-growth tech startups to established engineering enterprises. Client companies partner with our platform to find and hire exceptional talent for their open positions.',
     },
     {
-      q: 'How are candidate resumes stored and secured?',
-      a: 'Resumes are never exposed via unauthenticated public static links. EnterRecruit saves files to encrypted Supabase Storage buckets or protected disk paths. Recruiters access files exclusively through time-limited signed URLs generated upon verified JWT admin authentication.',
+      q: 'How does our platform match and place candidates?',
+      a: 'When you apply to a specific role or join our general talent pool, our objective skills rubric and team evaluate your practical engineering depth and project work. We then introduce qualified candidates directly to hiring managers and founders at client companies for interview loops.',
     },
     {
-      q: 'Does EnterRecruit support both general and targeted job applications?',
-      a: 'Yes. Candidates can apply directly to specific openings (e.g. /jobs/:id/apply) or submit an open general application (/apply). Both workflows ingest resumes with drag-and-drop support, parse qualifications, and populate recruiter pipeline tables in real-time.',
+      q: 'Is there any fee or cost for candidates to use this platform?',
+      a: 'Never. Our platform is 100% free for job seekers. Our client companies compensate us when they make a successful hire, so you never pay anything for applications, assessments, interview preparation, or placement.',
     },
     {
-      q: 'Can our hiring managers customize the stage transition finite-state machine?',
-      a: 'EnterRecruit includes a deterministic stage transition graph (Applied -> Screening -> Technical Interview -> Final Round -> Offer / Rejected). Every stage change writes an immutable audit log row with admin user ID and timestamp to guarantee EEOC compliance.',
+      q: 'Can I be considered for multiple client companies with one application?',
+      a: 'Yes! Submitting your CV to a role or our General Placement Pool makes you eligible across all current and upcoming openings hosted for our partner companies. If your skills match multiple client needs, we will advocate for you across all relevant teams.',
     },
     {
-      q: 'How quickly can our team deploy and start receiving candidate applications?',
-      a: 'Instant deployment. EnterRecruit automatically bootstraps 10 default enterprise roles (Engineering, Product, Architecture, Data) and an admin account on startup so your careers portal is ready to intake candidates immediately.',
+      q: 'How long does it take to hear back after submitting an application?',
+      a: 'We respect your time. Every submission is reviewed within 48 to 72 business hours. If there is a strong match with our partner companies, our team reaches out promptly to coordinate next steps and schedule company team interviews.',
     },
   ];
 
@@ -232,7 +205,7 @@ export const LandingPage: React.FC = () => {
               display: 'inline-block',
             }}
           />
-          Autonomous Recruitment & Talent Operating System
+          Talent Placement Network • Hiring for Leading Tech Companies & Startups
         </div>
 
         {/* Main Headline */}
@@ -247,7 +220,7 @@ export const LandingPage: React.FC = () => {
             maxWidth: '920px',
           }}
         >
-          Transform Candidate Resumes into Qualified Hires on Autopilot
+          One Application. Placed at Leading Tech Companies.
         </h1>
 
         {/* Subtitle */}
@@ -255,14 +228,12 @@ export const LandingPage: React.FC = () => {
           style={{
             fontSize: '1.12rem',
             color: 'var(--text-muted, #666560)',
-            maxWidth: '700px',
+            maxWidth: '720px',
             margin: '0 auto 34px',
             lineHeight: 1.6,
           }}
         >
-          EnterRecruit automates resume ingestion, multi-dimensional semantic scoring, and
-          candidate stage progression. Screen talent 10x faster with <strong>zero data leaks</strong> and
-          enterprise multi-tenant compliance.
+          Top companies partner with our talent platform to find and hire exceptional talent. Browse verified roles across high-growth startups and tech enterprises, showcase your real skills, and get fast-tracked to direct interviews.
         </p>
 
         {/* Primary Action Buttons */}
@@ -279,7 +250,7 @@ export const LandingPage: React.FC = () => {
           <a
             href="#roles"
             style={{
-              padding: '13px 36px',
+              padding: '13px 32px',
               borderRadius: '8px',
               backgroundColor: 'var(--primary, #da7756)',
               color: '#FFFFFF',
@@ -297,33 +268,34 @@ export const LandingPage: React.FC = () => {
             onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'var(--primary-hover, #c46445)')}
             onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'var(--primary, #da7756)')}
           >
-            <span>Explore Open Positions</span>
-            <span>→</span>
+            <span>Explore Partner Roles</span>
+            <span>↓</span>
           </a>
 
           <Link
-            to="/admin/login"
+            to="/apply"
             style={{
               padding: '13px 26px',
               borderRadius: '8px',
               backgroundColor: 'var(--bg-card, #ffffff)',
               color: 'var(--text-main, #24221f)',
               border: '1px solid var(--border-color, #e6e4dc)',
-              fontSize: '0.95rem',
+              fontSize: '0.98rem',
               fontWeight: 600,
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
             }}
             className="hover:bg-black/[0.02] transition-colors"
           >
-            <ShieldCheck className="w-4 h-4 text-[var(--primary)]" />
-            <span>Recruiter Command Center</span>
+            <Sparkles className="w-4 h-4 text-[var(--primary)]" />
+            <span>General Placement Pool</span>
           </Link>
         </div>
 
-        {/* 4 Minimalist Metric Cards from ResolveAI */}
+        {/* 4 Candidate Value Cards */}
         <div
           style={{
             display: 'grid',
@@ -343,29 +315,29 @@ export const LandingPage: React.FC = () => {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.02)',
             }}
           >
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--success, #378b59)' }}>
-              99.4%
-            </div>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted, #666560)', marginTop: '3px' }}>
-              Semantic Parsing Accuracy
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: '22px',
-              borderRadius: '12px',
-              backgroundColor: 'var(--bg-card, #ffffff)',
-              border: '1px solid var(--border-color, #e6e4dc)',
-              textAlign: 'center',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.02)',
-            }}
-          >
             <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary, #da7756)' }}>
-              &lt; 1.5s
+              Top Companies
             </div>
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted, #666560)', marginTop: '3px' }}>
-              Resume Ingestion & Scoring
+              Vetted Roles Across High-Growth Startups & Tech Firms
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: '22px',
+              borderRadius: '12px',
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              border: '1px solid var(--border-color, #e6e4dc)',
+              textAlign: 'center',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.02)',
+            }}
+          >
+            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--success, #378b59)' }}>
+              &lt; 48h Match
+            </div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted, #666560)', marginTop: '3px' }}>
+              Direct Introductions to Company Hiring Managers
             </div>
           </div>
 
@@ -380,10 +352,10 @@ export const LandingPage: React.FC = () => {
             }}
           >
             <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main, #24221f)' }}>
-              0% PII Leak
+              100% Skills-First
             </div>
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted, #666560)', marginTop: '3px' }}>
-              Signed URLs & Strict RBAC
+              Evaluated on Code & Architecture, Not Keywords
             </div>
           </div>
 
@@ -398,10 +370,10 @@ export const LandingPage: React.FC = () => {
             }}
           >
             <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main, #24221f)' }}>
-              10+ Seed Roles
+              100% Free
             </div>
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted, #666560)', marginTop: '3px' }}>
-              Instant Enterprise Deployment
+              Zero Cost to Candidates • Hired by Leading Teams
             </div>
           </div>
         </div>
@@ -450,13 +422,13 @@ export const LandingPage: React.FC = () => {
                   fontWeight: 600,
                 }}
               >
-                Live Candidate Evaluation & Rubric Engine Simulation
+                Transparent Evaluation • How We Review Applications
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span className="live-indicator" />
               <span style={{ fontSize: '0.75rem', color: 'var(--success, #378b59)', fontWeight: 600 }}>
-                Scoring Engine Active
+                Objective Rubric
               </span>
             </div>
           </div>
@@ -474,7 +446,7 @@ export const LandingPage: React.FC = () => {
             }}
           >
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted, #666560)', fontWeight: 600 }}>
-              Select Candidate Preset:
+              Preview Sample Role Evaluation:
             </span>
             {Object.keys(CANDIDATE_PRESETS).map((key) => {
               const preset = CANDIDATE_PRESETS[key];
@@ -659,10 +631,10 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* =========================================================
-          4. INTERACTIVE HIRING ROI / TIME SAVINGS CALCULATOR
+          4. HOW WE HIRE: CANDIDATE APPLICATION & INTERVIEW JOURNEY (#process)
           ========================================================= */}
       <section
-        id="roi-calculator"
+        id="process"
         style={{
           maxWidth: '1040px',
           margin: '0 auto 80px',
@@ -678,7 +650,7 @@ export const LandingPage: React.FC = () => {
             padding: '36px',
           }}
         >
-          <div className="text-center max-w-2xl mx-auto mb-8">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <div
               style={{
                 display: 'inline-flex',
@@ -692,113 +664,151 @@ export const LandingPage: React.FC = () => {
                 marginBottom: '6px',
               }}
             >
-              <Calculator className="w-4 h-4" /> Hiring Efficiency Calculator
+              <Compass className="w-4 h-4" /> The Placement Journey
             </div>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main, #24221f)' }}>
-              Estimate Your Recruiting Time & Cost Reduction
+            <h3 style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-main, #24221f)' }}>
+              How It Works: Getting Placed at Top Companies
             </h3>
             <p style={{ fontSize: '0.92rem', color: 'var(--text-muted, #666560)', marginTop: '4px' }}>
-              Adjust applicant volume and baseline screening duration to see real-time team savings.
+              Leading tech companies partner with us to find exceptional engineers and product builders. Here is how we connect you directly to hiring decision-makers.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            {/* Sliders */}
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between text-sm font-semibold mb-2">
-                  <span style={{ color: 'var(--text-main, #24221f)' }}>Monthly Applications Ingested</span>
-                  <span style={{ color: 'var(--primary, #da7756)', fontWeight: 800 }}>{monthlyApplicants}</span>
-                </div>
-                <input
-                  type="range"
-                  min="50"
-                  max="1500"
-                  step="50"
-                  value={monthlyApplicants}
-                  onChange={(e) => setMonthlyApplicants(Number(e.target.value))}
-                  className="w-full accent-[var(--primary)] cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-[var(--text-dim)] mt-1">
-                  <span>50 apps</span>
-                  <span>1,500 apps</span>
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Step 1 */}
+            <div
+              style={{
+                padding: '22px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--bg-dark, #f2f0e9)',
+                border: '1px solid var(--border-color, #e6e4dc)',
+              }}
+            >
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--primary, #da7756)',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '14px',
+                }}
+              >
+                1
               </div>
-
-              <div>
-                <div className="flex justify-between text-sm font-semibold mb-2">
-                  <span style={{ color: 'var(--text-main, #24221f)' }}>Current Manual Time-to-Screen</span>
-                  <span style={{ color: 'var(--primary, #da7756)', fontWeight: 800 }}>{manualScreeningDays} days</span>
-                </div>
-                <input
-                  type="range"
-                  min="7"
-                  max="60"
-                  step="1"
-                  value={manualScreeningDays}
-                  onChange={(e) => setManualScreeningDays(Number(e.target.value))}
-                  className="w-full accent-[var(--primary)] cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-[var(--text-dim)] mt-1">
-                  <span>7 days</span>
-                  <span>60 days</span>
-                </div>
-              </div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main, #24221f)', marginBottom: '6px' }}>
+                Apply or Join Pool
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted, #666560)', lineHeight: 1.5 }}>
+                Browse curated roles across our client companies or submit your CV once to our general placement pool.
+              </p>
             </div>
 
-            {/* Calculated Output Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Step 2 */}
+            <div
+              style={{
+                padding: '22px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--bg-dark, #f2f0e9)',
+                border: '1px solid var(--border-color, #e6e4dc)',
+              }}
+            >
               <div
                 style={{
-                  padding: '20px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--bg-dark, #f2f0e9)',
-                  border: '1px solid var(--border-color, #e6e4dc)',
-                  textAlign: 'center',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--primary, #da7756)',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '14px',
                 }}
               >
-                <div style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--primary, #da7756)' }}>
-                  {hoursSavedPerMonth}h
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #666560)', marginTop: '2px', fontWeight: 600 }}>
-                  Recruiter Hours Saved / Mo
-                </div>
+                2
               </div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main, #24221f)', marginBottom: '6px' }}>
+                Skills Benchmark
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted, #666560)', lineHeight: 1.5 }}>
+                Our objective rubric assesses your actual code, past projects, and system design—calibrated to what partner teams need.
+              </p>
+            </div>
 
+            {/* Step 3 */}
+            <div
+              style={{
+                padding: '22px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--bg-dark, #f2f0e9)',
+                border: '1px solid var(--border-color, #e6e4dc)',
+              }}
+            >
               <div
                 style={{
-                  padding: '20px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--bg-dark, #f2f0e9)',
-                  border: '1px solid var(--border-color, #e6e4dc)',
-                  textAlign: 'center',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--primary, #da7756)',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '14px',
                 }}
               >
-                <div style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--success, #378b59)' }}>
-                  ${costSavingsDollars.toLocaleString('en-US')}
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #666560)', marginTop: '2px', fontWeight: 600 }}>
-                  Estimated Monthly Savings
-                </div>
+                3
               </div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main, #24221f)', marginBottom: '6px' }}>
+                Direct Introductions
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted, #666560)', lineHeight: 1.5 }}>
+                Skip resume black holes. We introduce qualified candidates directly to engineering heads and founders at client companies.
+              </p>
+            </div>
 
+            {/* Step 4 */}
+            <div
+              style={{
+                padding: '22px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--bg-dark, #f2f0e9)',
+                border: '1px solid var(--border-color, #e6e4dc)',
+              }}
+            >
               <div
                 style={{
-                  padding: '20px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--bg-dark, #f2f0e9)',
-                  border: '1px solid var(--border-color, #e6e4dc)',
-                  textAlign: 'center',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--success, #378b59)',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '14px',
                 }}
-                className="col-span-2"
               >
-                <div style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main, #24221f)' }}>
-                  {timeToOfferReductionDays} Days Faster
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #666560)', marginTop: '2px', fontWeight: 600 }}>
-                  Average Reduction in Candidate Time-to-Offer
-                </div>
+                4
               </div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main, #24221f)', marginBottom: '6px' }}>
+                Interview & Offer
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted, #666560)', lineHeight: 1.5 }}>
+                Interview directly with company teams and secure competitive compensation, equity packages, and seamless placement.
+              </p>
             </div>
           </div>
         </div>
@@ -833,10 +843,10 @@ export const LandingPage: React.FC = () => {
               <Briefcase className="w-4 h-4" /> Live Open Positions
             </div>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main, #24221f)' }}>
-              Join Our Engineering & Product Teams
+              Open Roles Across Partner Companies
             </h2>
             <p style={{ fontSize: '0.95rem', color: 'var(--text-muted, #666560)', marginTop: '4px' }}>
-              Select a position below to submit your resume directly or review role specifications.
+              Explore active engineering, product, and AI positions hosted for our client companies.
             </p>
           </div>
 
@@ -862,244 +872,243 @@ export const LandingPage: React.FC = () => {
           </Link>
         </div>
 
-        {/* Search & Filter Bar */}
-        <div
-          style={{
-            backgroundColor: 'var(--bg-card, #ffffff)',
-            border: '1px solid var(--border-color, #e6e4dc)',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '28px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
-          }}
-          className="flex flex-col md:flex-row gap-4 items-center justify-between"
-        >
-          {/* Keyword Search */}
-          <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search by title, department, or keyword..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                backgroundColor: 'var(--bg-dark, #f2f0e9)',
-                border: '1px solid var(--border-color, #e6e4dc)',
-                borderRadius: '8px',
-                padding: '9px 14px 9px 36px',
-                fontSize: '0.86rem',
-                color: 'var(--text-main, #24221f)',
-                outline: 'none',
-              }}
-              className="w-full focus:border-[var(--primary)] transition-colors"
-            />
-          </div>
-
-          {/* Department Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
-            {departments.map((dept) => {
-              const isSelected = selectedDepartment === dept;
-              return (
-                <button
-                  key={dept}
-                  onClick={() => setSelectedDepartment(dept)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    backgroundColor: isSelected ? 'var(--primary, #da7756)' : 'var(--bg-dark, #f2f0e9)',
-                    color: isSelected ? '#FFFFFF' : 'var(--text-muted, #666560)',
-                    border: isSelected ? '1px solid var(--primary, #da7756)' : '1px solid var(--border-color, #e6e4dc)',
-                  }}
-                >
-                  {dept === 'ALL' ? 'All Roles' : dept}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Roles List */}
+        {/* Roles List: Top 3 Most Recent Openings */}
         {loadingJobs ? (
-          <div className="py-20 flex flex-col items-center justify-center space-y-2">
+          <div className="py-16 flex flex-col items-center justify-center space-y-2">
             <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
-            <p className="text-sm font-medium text-[var(--text-muted)]">Loading active positions...</p>
+            <p className="text-sm font-medium text-[var(--text-muted)]">Loading recent openings...</p>
           </div>
-        ) : filteredJobs.length === 0 ? (
+        ) : recentJobs.length === 0 ? (
           <div
             style={{
               backgroundColor: 'var(--bg-card, #ffffff)',
               border: '1px solid var(--border-color, #e6e4dc)',
-              borderRadius: '12px',
+              borderRadius: '16px',
               padding: '48px',
               textAlign: 'center',
             }}
           >
             <Briefcase className="w-10 h-10 text-[var(--text-dim)] mx-auto mb-3" />
             <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main, #24221f)' }}>
-              No positions matched your query
+              No open roles currently posted
             </h4>
             <p style={{ fontSize: '0.86rem', color: 'var(--text-muted, #666560)', marginTop: '4px' }}>
-              Clear filters or submit an open general application.
+              Submit a general open application to be considered for upcoming partner roles.
             </p>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedDepartment('ALL');
-              }}
+            <Link
+              to="/apply"
               style={{
                 marginTop: '16px',
-                padding: '8px 18px',
+                padding: '9px 20px',
                 borderRadius: '8px',
-                backgroundColor: 'var(--bg-dark, #f2f0e9)',
-                border: '1px solid var(--border-color, #e6e4dc)',
+                backgroundColor: 'var(--primary, #da7756)',
+                color: '#FFFFFF',
                 fontSize: '0.84rem',
                 fontWeight: 600,
-                color: 'var(--text-main, #24221f)',
-                cursor: 'pointer',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
               }}
             >
-              Reset Filters
-            </button>
+              <span>Submit General Application</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredJobs.map((job) => (
-              <div
-                key={job.id}
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recentJobs.map((job) => {
+                const meta = parseJobDescription(job.description);
+
+                return (
+                  <div
+                    key={job.id}
+                    style={{
+                      backgroundColor: 'var(--bg-card, #ffffff)',
+                      border: '1px solid var(--border-color, #e6e4dc)',
+                      borderRadius: '16px',
+                      padding: '24px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
+                      transition: 'box-shadow 0.2s, border-color 0.2s',
+                    }}
+                    className="hover:shadow-md hover:border-[#dcdad0] group"
+                  >
+                    <div className="space-y-3.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            style={{
+                              backgroundColor: 'var(--bg-dark, #f2f0e9)',
+                              color: 'var(--indigo, #5d574e)',
+                              fontSize: '0.74rem',
+                              fontWeight: 700,
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.04em',
+                            }}
+                          >
+                            {job.department}
+                          </span>
+
+                          {meta.companyName && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--text-main)] bg-[var(--bg-card-hover)] px-2 py-0.5 rounded-md border border-[var(--border-color)]">
+                              <Building2 className="w-3 h-3 text-[var(--primary)]" />
+                              {meta.companyName}
+                            </span>
+                          )}
+                        </div>
+
+                        <span
+                          style={{
+                            fontSize: '0.74rem',
+                            color: 'var(--text-muted, #666560)',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {job.job_type || 'Full-Time'}
+                        </span>
+                      </div>
+
+                      <h3
+                        style={{
+                          fontSize: '1.2rem',
+                          fontWeight: 800,
+                          color: 'var(--text-main, #24221f)',
+                          lineHeight: 1.3,
+                        }}
+                        className="group-hover:text-[var(--primary)] transition-colors"
+                      >
+                        {job.title}
+                      </h3>
+
+                      <div className="flex items-center text-xs text-[var(--text-muted)] gap-4">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-[var(--text-dim)]" />
+                          {job.location || 'Remote'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-[var(--text-dim)]" />
+                          {meta.workplaceType || 'Immediate'}
+                        </span>
+                      </div>
+
+                      {meta.skills && meta.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {meta.skills.slice(0, 3).map((skill, idx) => (
+                            <span
+                              key={idx}
+                              style={{
+                                backgroundColor: 'rgba(218, 119, 86, 0.08)',
+                                color: 'var(--primary, #da7756)',
+                                borderColor: 'rgba(218, 119, 86, 0.2)',
+                              }}
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-md border"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <p
+                        style={{
+                          fontSize: '0.84rem',
+                          color: 'var(--text-muted, #666560)',
+                          lineHeight: 1.5,
+                        }}
+                        className="line-clamp-3"
+                      >
+                        {meta.cleanDescription || job.description}
+                      </p>
+                    </div>
+
+                    <div
+                      style={{
+                        paddingTop: '16px',
+                        marginTop: '16px',
+                        borderTop: '1px solid var(--border-color, #e6e4dc)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Link
+                        to={`/jobs/${job.id}/apply`}
+                        style={{
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: 'var(--text-muted, #666560)',
+                          textDecoration: 'none',
+                        }}
+                        className="hover:text-[var(--text-main)]"
+                      >
+                        View Details
+                      </Link>
+
+                      <Link
+                        to={`/jobs/${job.id}/apply`}
+                        style={{
+                          padding: '8px 18px',
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--primary, #da7756)',
+                          color: '#FFFFFF',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 2px 6px rgba(218, 119, 86, 0.2)',
+                        }}
+                        className="hover:opacity-95 transition-opacity"
+                      >
+                        <span>Apply</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* View All Roles Navigation Bar */}
+            <div className="text-center pt-2">
+              <Link
+                to="/apply"
                 style={{
                   backgroundColor: 'var(--bg-card, #ffffff)',
                   border: '1px solid var(--border-color, #e6e4dc)',
+                  color: 'var(--text-main, #24221f)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+                  padding: '12px 28px',
                   borderRadius: '12px',
-                  padding: '22px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
-                  transition: 'box-shadow 0.2s, border-color 0.2s',
+                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
                 }}
-                className="hover:shadow-md hover:border-[#dcdad0] group"
+                className="hover:border-[var(--primary)] hover:text-[var(--primary)] transition shadow-xs"
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      style={{
-                        backgroundColor: 'var(--bg-dark, #f2f0e9)',
-                        color: 'var(--indigo, #5d574e)',
-                        fontSize: '0.74rem',
-                        fontWeight: 700,
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                      }}
-                    >
-                      {job.department}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '0.74rem',
-                        color: 'var(--text-muted, #666560)',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {job.job_type || 'Full-Time'}
-                    </span>
-                  </div>
-
-                  <h3
-                    style={{
-                      fontSize: '1.18rem',
-                      fontWeight: 800,
-                      color: 'var(--text-main, #24221f)',
-                      lineHeight: 1.3,
-                    }}
-                    className="group-hover:text-[var(--primary)] transition-colors"
-                  >
-                    {job.title}
-                  </h3>
-
-                  <div className="flex items-center text-xs text-[var(--text-muted)] gap-4">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-[var(--text-dim)]" />
-                      {job.location || 'Remote'}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-[var(--text-dim)]" />
-                      Immediate
-                    </span>
-                  </div>
-
-                  <p
-                    style={{
-                      fontSize: '0.84rem',
-                      color: 'var(--text-muted, #666560)',
-                      lineHeight: 1.5,
-                    }}
-                    className="line-clamp-3"
-                  >
-                    {job.description}
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    paddingTop: '16px',
-                    marginTop: '16px',
-                    borderTop: '1px solid var(--border-color, #e6e4dc)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Link
-                    to={`/jobs/${job.id}/apply`}
-                    style={{
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
-                      color: 'var(--text-muted, #666560)',
-                      textDecoration: 'none',
-                    }}
-                    className="hover:text-[var(--text-main)]"
-                  >
-                    View Details
-                  </Link>
-
-                  <Link
-                    to={`/jobs/${job.id}/apply`}
-                    style={{
-                      padding: '7px 16px',
-                      borderRadius: '8px',
-                      backgroundColor: 'var(--primary, #da7756)',
-                      color: '#FFFFFF',
-                      fontSize: '0.82rem',
-                      fontWeight: 700,
-                      textDecoration: 'none',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      boxShadow: '0 2px 6px rgba(218, 119, 86, 0.2)',
-                    }}
-                    className="hover:opacity-95 transition-opacity"
-                  >
-                    <span>Apply</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </div>
-            ))}
+                <span>View All Open Positions ({jobs.length})</span>
+                <ArrowRight className="w-4 h-4 text-[var(--primary)]" />
+              </Link>
+            </div>
           </div>
         )}
       </section>
 
       {/* =========================================================
-          6. PLATFORM CAPABILITIES SECTION (#capabilities)
+          6. WHY BUILD WITH US / LIFE & CULTURE (#culture)
           ========================================================= */}
       <section
-        id="capabilities"
+        id="culture"
         style={{
           maxWidth: '1120px',
           margin: '0 auto 80px',
@@ -1120,11 +1129,14 @@ export const LandingPage: React.FC = () => {
               marginBottom: '6px',
             }}
           >
-            <Layers className="w-4 h-4" /> Enterprise Infrastructure
+            <Users className="w-4 h-4" /> Why Candidates Choose Us
           </div>
           <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main, #24221f)' }}>
-            Engineered for Modern Talent Teams
+            Why Apply Through Our Talent Network
           </h2>
+          <p style={{ fontSize: '0.92rem', color: 'var(--text-muted, #666560)', marginTop: '4px' }}>
+            We partner directly with leading startups and technology enterprises to match high-caliber engineering and product builders.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -1149,44 +1161,13 @@ export const LandingPage: React.FC = () => {
                 marginBottom: '16px',
               }}
             >
-              <Cpu className="w-5 h-5" />
-            </div>
-            <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main, #24221f)', marginBottom: '6px' }}>
-              Semantic AI Scoring
-            </h4>
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-muted, #666560)', lineHeight: 1.5 }}>
-              Deep rubric evaluation calibrated to role specifications without keyword-stuffing exploits.
-            </p>
-          </div>
-
-          <div
-            style={{
-              padding: '24px',
-              borderRadius: '12px',
-              backgroundColor: 'var(--bg-card, #ffffff)',
-              border: '1px solid var(--border-color, #e6e4dc)',
-            }}
-          >
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(55, 139, 89, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--success, #378b59)',
-                marginBottom: '16px',
-              }}
-            >
               <Zap className="w-5 h-5" />
             </div>
             <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main, #24221f)', marginBottom: '6px' }}>
-              Real-time Pipeline
+              Direct Lead Access
             </h4>
             <p style={{ fontSize: '0.84rem', color: 'var(--text-muted, #666560)', lineHeight: 1.5 }}>
-              Kanban and tabular candidate progression with instantaneous stage transitions and audit logs.
+              Skip generic resume portals. We introduce your verified profile directly to engineering directors and founders at partner companies.
             </p>
           </div>
 
@@ -1203,21 +1184,21 @@ export const LandingPage: React.FC = () => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(93, 87, 78, 0.1)',
+                backgroundColor: 'rgba(218, 119, 86, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--indigo, #5d574e)',
+                color: 'var(--primary, #da7756)',
                 marginBottom: '16px',
               }}
             >
-              <Lock className="w-5 h-5" />
+              <Cpu className="w-5 h-5" />
             </div>
             <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main, #24221f)', marginBottom: '6px' }}>
-              Zero-Leak Security
+              Curated Opportunities
             </h4>
             <p style={{ fontSize: '0.84rem', color: 'var(--text-muted, #666560)', lineHeight: 1.5 }}>
-              Strict signed URLs, JWT admin auth, path traversal defenses, and zero public static PII mounts.
+              Discover vetted roles across early-stage AI pioneers, fast-scaling venture startups, and established global tech companies.
             </p>
           </div>
 
@@ -1234,21 +1215,52 @@ export const LandingPage: React.FC = () => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                backgroundColor: 'rgba(218, 119, 86, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--warning, #d97706)',
+                color: 'var(--primary, #da7756)',
                 marginBottom: '16px',
               }}
             >
-              <Sparkles className="w-5 h-5" />
+              <Compass className="w-5 h-5" />
             </div>
             <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main, #24221f)', marginBottom: '6px' }}>
-              Targeted & Open Apply
+              One Assessment, Multiple Offers
             </h4>
             <p style={{ fontSize: '0.84rem', color: 'var(--text-muted, #666560)', lineHeight: 1.5 }}>
-              Dedicated direct position links and general applicant pools with responsive drag-and-drop resume upload.
+              Your objective skills evaluation opens doors to multiple client companies and roles without repeating initial phone screens.
+            </p>
+          </div>
+
+          <div
+            style={{
+              padding: '24px',
+              borderRadius: '12px',
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              border: '1px solid var(--border-color, #e6e4dc)',
+            }}
+          >
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(218, 119, 86, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--primary, #da7756)',
+                marginBottom: '16px',
+              }}
+            >
+              <Award className="w-5 h-5" />
+            </div>
+            <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main, #24221f)', marginBottom: '6px' }}>
+              Advocacy & Negotiation
+            </h4>
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-muted, #666560)', lineHeight: 1.5 }}>
+              We support you through interview preparation, competitive salary negotiations, and equity packages—always 100% free for candidates.
             </p>
           </div>
         </div>
@@ -1270,7 +1282,7 @@ export const LandingPage: React.FC = () => {
             Frequently Asked Questions
           </h2>
           <p style={{ fontSize: '0.92rem', color: 'var(--text-muted, #666560)', marginTop: '4px' }}>
-            Everything you need to know about EnterRecruit architecture and candidate privacy.
+            Everything you need to know about our hiring process, remote policy, and candidate experience.
           </p>
         </div>
 
@@ -1358,22 +1370,22 @@ export const LandingPage: React.FC = () => {
               <Briefcase className="w-4 h-4" />
             </div>
             <div>
-              <div style={{ fontWeight: 800, color: 'var(--text-main, #24221f)' }}>EnterRecruit</div>
+              <div style={{ fontWeight: 800, color: 'var(--text-main, #24221f)' }}>Careers Hub</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-dim, #9c9a93)' }}>
-                Autonomous Talent Operating System
+                Official Careers & Opportunities Portal
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-6">
             <a href="#roles" className="hover:text-[var(--text-main)] no-underline text-[var(--text-muted)]">
-              Open Positions
+              Partner Roles
+            </a>
+            <a href="#process" className="hover:text-[var(--text-main)] no-underline text-[var(--text-muted)]">
+              How It Works
             </a>
             <Link to="/apply" className="hover:text-[var(--text-main)] no-underline text-[var(--text-muted)]">
-              Candidate Portal
-            </Link>
-            <Link to="/admin/login" className="hover:text-[var(--text-main)] no-underline text-[var(--text-muted)]">
-              Recruiter Admin
+              General Placement Pool
             </Link>
             <a
               href="/api/health"
@@ -1381,13 +1393,13 @@ export const LandingPage: React.FC = () => {
               rel="noreferrer"
               className="hover:text-[var(--text-main)] no-underline text-[var(--text-muted)] flex items-center gap-1"
             >
-              <span>API Health</span>
+              <span>System Status</span>
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>
 
           <div className="text-center sm:text-right text-[var(--text-dim)]">
-            &copy; {new Date().getFullYear()} EnterRecruit. All rights reserved.
+            &copy; {new Date().getFullYear()} Talent Placement Network. All rights reserved.
           </div>
         </div>
       </footer>

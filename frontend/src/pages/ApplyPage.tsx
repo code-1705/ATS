@@ -1,137 +1,103 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
-import { JobSelectorDropdown } from '../components/JobSelectorDropdown';
-import { JobDetailsCard } from '../components/JobDetailsCard';
-import { ResumeDropzone } from '../components/ResumeDropzone';
-import { SuccessModal } from '../components/SuccessModal';
-import { getOpenJobs, submitGeneralApplication } from '../services/api';
-import type { Job, ApplicationResponse } from '../types';
-import { User, Phone, Mail, Send, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { getOpenJobs } from '../services/api';
+import type { Job } from '../types';
+import {
+  Sparkles,
+  AlertCircle,
+  Loader2,
+  MapPin,
+  Clock,
+  Briefcase,
+  Search,
+  ArrowRight,
+} from 'lucide-react';
 
 export const ApplyPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const preselectedJobId = searchParams.get('job_id') || '';
+  const navigate = useNavigate();
 
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string>(preselectedJobId);
   const [loadingJobs, setLoadingJobs] = useState<boolean>(true);
-  const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successApplication, setSuccessApplication] = useState<ApplicationResponse | null>(null);
 
-  // Form Fields State
-  const [name, setName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [phone, setPhone] = useState<string>('');
-  const [note, setNote] = useState<string>('');
-  const [resume, setResume] = useState<File | null>(null);
+  // Search & Filter state for KPI cards
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('ALL');
 
-  // Field validation errors
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const handleApplyJob = (jobId: string) => {
+    navigate(`/jobs/${jobId}/apply`);
+  };
 
   const loadJobs = useCallback(async () => {
     setLoadingJobs(true);
     try {
       const data = await getOpenJobs();
       setJobs(data);
-      setSelectedJobId((prev) => {
-        if (preselectedJobId && data.some((j) => j.id === preselectedJobId)) {
-          return preselectedJobId;
-        }
-        if (data.length > 0 && !prev) {
-          return data[0].id;
-        }
-        return prev;
-      });
     } catch {
       setErrorMessage('Unable to load open jobs. Please make sure the backend server is running.');
     } finally {
       setLoadingJobs(false);
     }
-  }, [preselectedJobId]);
+  }, []);
 
   useEffect(() => {
     loadJobs();
   }, [loadJobs]);
 
-  const selectedJob = jobs.find((j) => j.id === selectedJobId);
+  // Unique departments for filter chips
+  const departments = useMemo(() => {
+    const deps = new Set<string>();
+    jobs.forEach((j) => {
+      if (j.department) deps.add(j.department);
+    });
+    return ['ALL', ...Array.from(deps)];
+  }, [jobs]);
 
-  const validate = (): boolean => {
-    const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = 'Full Name is required';
-    if (!email.trim()) {
-      errs.email = 'Email address is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errs.email = 'Enter a valid email address';
-    }
-    if (!phone.trim()) {
-      errs.phone = 'Phone number is required';
-    } else if (phone.trim().length < 7) {
-      errs.phone = 'Enter a valid phone number';
-    }
-    if (!selectedJobId) errs.job_id = 'Please select a job position';
-    if (!resume) errs.resume = 'Please upload your resume (PDF/DOCX)';
+  // Filtered jobs based on search & department
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      const matchesSearch =
+        !searchQuery.trim() ||
+        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.department?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
+      const matchesDepartment =
+        selectedDepartment === 'ALL' || job.department === selectedDepartment;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-
-    if (!validate()) return;
-
-    setSubmitting(true);
-    try {
-      const result = await submitGeneralApplication({
-        job_id: selectedJobId,
-        candidate_name: name,
-        candidate_email: email,
-        candidate_phone: phone,
-        brief_note: note,
-        resume: resume!
-      });
-      setSuccessApplication(result);
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Failed to submit application. Please try again.';
-      setErrorMessage(msg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleResetForm = () => {
-    setName('');
-    setEmail('');
-    setPhone('');
-    setNote('');
-    setResume(null);
-    setErrors({});
-    setSuccessApplication(null);
-  };
+      return matchesSearch && matchesDepartment;
+    });
+  }, [jobs, searchQuery, selectedDepartment]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-[var(--bg-dark)] flex flex-col">
       <Navbar activeJobsCount={jobs.length} />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full flex-1">
-        {/* Hero Section */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full flex-1">
+        {/* Header Section */}
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
-          <div className="inline-flex items-center space-x-2 text-xs font-semibold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Join Our World-Class Team</span>
+          <div
+            style={{
+              backgroundColor: 'rgba(218, 119, 86, 0.1)',
+              borderColor: 'rgba(218, 119, 86, 0.25)',
+              color: 'var(--primary, #da7756)',
+            }}
+            className="inline-flex items-center space-x-2 text-xs font-bold px-3 py-1 rounded-full border"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Talent Placement Network • Multiple Company Opportunities</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Apply for Open Positions
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-main)] tracking-tight">
+            Explore Partner Positions
           </h1>
-          <p className="text-sm sm:text-base text-slate-600">
-            Select an opening, attach your resume, and submit your details. Fast, transparent hiring decisions.
+          <p className="text-sm sm:text-base text-[var(--text-muted)]">
+            Browse active engineering, product, and AI positions hosted for our partner companies. Click any position card to apply directly.
           </p>
         </div>
 
-        {/* Loading / Error States */}
+        {/* Global Error Banner */}
         {errorMessage && (
           <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center space-x-3">
             <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
@@ -139,175 +105,158 @@ export const ApplyPage: React.FC = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-6 sm:p-8 space-y-8">
-            {/* Step 1: Job Selection */}
+        {/* =========================================================================
+            AVAILABLE JOBS IN KPI CARDS FORMAT
+            ========================================================================= */}
+        <section className="mb-12">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
-              <h2 className="text-base font-bold text-slate-900 mb-3 flex items-center space-x-2">
-                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-                <span>Select Target Role</span>
+              <h2 className="text-lg sm:text-xl font-bold text-[var(--text-main)]">
+                Available Roles ({jobs.length})
               </h2>
-
-              {loadingJobs ? (
-                <div className="flex items-center justify-center p-6 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-500">
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin text-indigo-600" />
-                  Loading available roles...
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <JobSelectorDropdown
-                    jobs={jobs}
-                    selectedJobId={selectedJobId}
-                    onSelectJob={(id) => {
-                      if (id !== selectedJobId) {
-                        setSelectedJobId(id);
-                        handleResetForm();
-                      }
-                      setErrors((prev) => ({ ...prev, job_id: '' }));
-                    }}
-                    error={errors.job_id}
-                  />
-
-
-                  {selectedJob && <JobDetailsCard job={selectedJob} />}
-                </div>
-              )}
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-1">
+                Click on any job KPI card to open its dedicated application page.
+              </p>
             </div>
 
-            {/* Step 2: Personal Information */}
-            <form onSubmit={handleSubmit} className="space-y-6 pt-6 border-t border-slate-200">
-              <h2 className="text-base font-bold text-slate-900 flex items-center space-x-2">
-                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">2</span>
-                <span>Your Information</span>
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {/* Full Name */}
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-slate-800">
-                    Full Name <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="e.g. Jane Doe"
-                      value={name}
-                      onChange={(e) => {
-                        setName(e.target.value);
-                        setErrors((prev) => ({ ...prev, name: '' }));
-                      }}
-                      className={`w-full bg-white border rounded-xl px-3.5 py-2.5 pl-10 text-sm text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition ${
-                        errors.name ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-300'
-                      }`}
-                    />
-                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                  </div>
-                  {errors.name && <p className="text-xs text-rose-600 mt-1">{errors.name}</p>}
-                </div>
-
-                {/* Email */}
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-slate-800">
-                    Email Address <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      placeholder="e.g. jane.doe@example.com"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setErrors((prev) => ({ ...prev, email: '' }));
-                      }}
-                      className={`w-full bg-white border rounded-xl px-3.5 py-2.5 pl-10 text-sm text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition ${
-                        errors.email ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-300'
-                      }`}
-                    />
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                  </div>
-                  {errors.email && <p className="text-xs text-rose-600 mt-1">{errors.email}</p>}
-                </div>
-
-                {/* Phone */}
-                <div className="space-y-1.5 sm:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-800">
-                    Phone Number <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="tel"
-                      placeholder="e.g. +1 (555) 000-0000 or +91 9876543210"
-                      value={phone}
-                      onChange={(e) => {
-                        setPhone(e.target.value);
-                        setErrors((prev) => ({ ...prev, phone: '' }));
-                      }}
-                      className={`w-full bg-white border rounded-xl px-3.5 py-2.5 pl-10 text-sm text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition ${
-                        errors.phone ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-300'
-                      }`}
-                    />
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                  </div>
-                  {errors.phone && <p className="text-xs text-rose-600 mt-1">{errors.phone}</p>}
-                </div>
-              </div>
-
-              {/* Resume Upload */}
-              <ResumeDropzone
-                selectedFile={resume}
-                onFileSelect={(file) => {
-                  setResume(file);
-                  setErrors((prev) => ({ ...prev, resume: '' }));
-                }}
-                error={errors.resume}
+            {/* Search Input */}
+            <div className="relative w-full md:w-72">
+              <input
+                type="text"
+                placeholder="Search roles, skills, location..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-[var(--border-color)] rounded-xl pl-9 pr-3.5 py-2 text-xs sm:text-sm text-[var(--text-main)] placeholder-[var(--text-dim)] focus:outline-hidden focus:ring-2 focus:ring-[var(--primary)] transition shadow-xs"
               />
-
-              {/* Brief Note */}
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-slate-800">
-                  Brief Note / Cover Message <span className="text-xs font-normal text-slate-500">(Optional)</span>
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Share a brief introduction, standout projects, or why you are excited for this role..."
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl p-3 text-sm text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                />
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={submitting || loadingJobs}
-                  className="w-full sm:w-auto min-w-[200px] flex items-center justify-center py-3.5 px-6 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Submitting Application...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Submit Application
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+              <Search className="w-4 h-4 text-[var(--text-dim)] absolute left-3 top-2.5" />
+            </div>
           </div>
-        </div>
-      </main>
 
-      {/* Success Confirmation Modal */}
-      {successApplication && (
-        <SuccessModal
-          application={successApplication}
-          onReset={handleResetForm}
-        />
-      )}
+          {/* Department Filter Chips */}
+          {departments.length > 2 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
+              {departments.map((dep) => {
+                const isSelected = selectedDepartment === dep;
+                return (
+                  <button
+                    key={dep}
+                    type="button"
+                    onClick={() => setSelectedDepartment(dep)}
+                    style={{
+                      backgroundColor: isSelected ? 'var(--primary, #da7756)' : 'var(--bg-card, #ffffff)',
+                      color: isSelected ? '#ffffff' : 'var(--text-muted, #666560)',
+                      borderColor: isSelected ? 'var(--primary, #da7756)' : 'var(--border-color, #e6e4dc)',
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all whitespace-nowrap cursor-pointer shadow-xs"
+                  >
+                    {dep === 'ALL' ? 'All Roles' : dep}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* KPI Cards Grid */}
+          {loadingJobs ? (
+            <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-[var(--border-color)] text-sm text-[var(--text-muted)]">
+              <Loader2 className="w-6 h-6 mb-3 animate-spin text-[var(--primary)]" />
+              <span>Loading partner opportunities...</span>
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <div className="text-center p-10 bg-white rounded-2xl border border-[var(--border-color)]">
+              <Briefcase className="w-8 h-8 mx-auto text-[var(--text-dim)] mb-2" />
+              <h4 className="text-sm font-bold text-[var(--text-main)]">No matching positions found</h4>
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                Try clearing your search query or department filter.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedDepartment('ALL');
+                }}
+                className="mt-4 px-4 py-2 bg-[var(--bg-card-hover)] border border-[var(--border-color)] rounded-lg text-xs font-semibold text-[var(--primary)] cursor-pointer"
+              >
+                Reset Filters
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredJobs.map((job) => (
+                <div
+                  key={job.id}
+                  onClick={() => handleApplyJob(job.id)}
+                  style={{
+                    borderColor: 'var(--border-color, #e6e4dc)',
+                    backgroundColor: 'var(--bg-card, #ffffff)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
+                  }}
+                  className="group relative rounded-2xl p-5 sm:p-6 border transition-all duration-200 cursor-pointer flex flex-col justify-between hover:border-[var(--primary)] hover:shadow-md"
+                >
+                  {/* Top Row: Department Badge & Action Indicator */}
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span
+                        style={{
+                          backgroundColor: 'rgba(218, 119, 86, 0.1)',
+                          color: 'var(--primary, #da7756)',
+                          borderColor: 'rgba(218, 119, 86, 0.25)',
+                        }}
+                        className="text-[0.7rem] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                      >
+                        {job.department || 'General'}
+                      </span>
+
+                      <span className="text-[0.75rem] font-semibold text-[var(--primary)] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                        Apply Now →
+                      </span>
+                    </div>
+
+                    {/* Job Title */}
+                    <h3 className="text-base font-extrabold tracking-tight mb-2 text-[var(--text-main)] group-hover:text-[var(--primary)] transition-colors line-clamp-1">
+                      {job.title}
+                    </h3>
+
+                    {/* KPI Metrics Chips */}
+                    <div className="grid grid-cols-2 gap-2 my-3.5">
+                      <div className="bg-[var(--bg-card-hover)] border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+                        <MapPin className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" />
+                        <span className="truncate font-medium">{job.location || 'Remote'}</span>
+                      </div>
+                      <div className="bg-[var(--bg-card-hover)] border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+                        <Clock className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" />
+                        <span className="truncate font-medium">{job.job_type || 'Full-time'}</span>
+                      </div>
+                    </div>
+
+                    {/* Description Snippet */}
+                    <p className="text-xs text-[var(--text-muted)] line-clamp-2 leading-relaxed mb-4">
+                      {job.description}
+                    </p>
+                  </div>
+
+                  {/* Card Footer Button */}
+                  <div className="pt-3 border-t border-[var(--border-color)]">
+                    <Link
+                      to={`/jobs/${job.id}/apply`}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        backgroundColor: 'var(--primary, #da7756)',
+                        color: '#ffffff',
+                        boxShadow: '0 2px 8px rgba(218, 119, 86, 0.25)',
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 no-underline hover:opacity-95 cursor-pointer"
+                    >
+                      <span>Apply for This Role</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 };

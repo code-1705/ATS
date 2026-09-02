@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { UploadCloud, FileText, CheckCircle2, X, AlertCircle } from 'lucide-react';
 
 interface ResumeDropzoneProps {
@@ -84,10 +84,10 @@ export const ResumeDropzone: React.FC<ResumeDropzoneProps> = ({
           onClick={() => fileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${
             isDragging
-              ? 'border-indigo-500 bg-indigo-50/50 scale-[1.01]'
+              ? 'border-[var(--primary)] bg-[rgba(218,119,86,0.08)] scale-[1.01]'
               : error || internalError
               ? 'border-rose-300 bg-rose-50/30 hover:border-rose-400'
-              : 'border-slate-300 bg-slate-50/50 hover:border-indigo-400 hover:bg-slate-50'
+              : 'border-[var(--border-color)] bg-[var(--bg-card-hover)] hover:border-[var(--primary)]'
           }`}
         >
           <input
@@ -97,13 +97,22 @@ export const ResumeDropzone: React.FC<ResumeDropzoneProps> = ({
             onChange={handleFileInputChange}
             className="hidden"
           />
-          <div className="w-12 h-12 mx-auto rounded-full bg-indigo-100/80 text-indigo-600 flex items-center justify-center mb-3">
+          <div
+            style={{
+              backgroundColor: 'rgba(218, 119, 86, 0.12)',
+              color: 'var(--primary, #da7756)',
+            }}
+            className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3"
+          >
             <UploadCloud className="w-6 h-6" />
           </div>
-          <p className="text-sm font-medium text-slate-700">
-            <span className="text-indigo-600 hover:underline">Click to upload</span> or drag and drop
+          <p className="text-sm font-semibold text-[var(--text-main)]">
+            <span style={{ color: 'var(--primary, #da7756)' }} className="hover:underline">
+              Click to upload
+            </span>{' '}
+            or drag and drop
           </p>
-          <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX up to 10MB</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">PDF, DOC, DOCX up to 10MB</p>
         </div>
       ) : (
         <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-xs">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Briefcase, Menu, X, ShieldCheck } from 'lucide-react';
+import { Briefcase, Menu, X } from 'lucide-react';
 
 interface LandingNavbarProps {
   activeJobsCount?: number;
@@ -46,7 +46,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeJobsCount })
                 whiteSpace: 'nowrap',
               }}
             >
-              EnterRecruit
+              Careers Hub
             </div>
             <div
               style={{
@@ -58,7 +58,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeJobsCount })
                 whiteSpace: 'nowrap',
               }}
             >
-              Autonomous ATS
+              Talent & Placement Network
             </div>
           </div>
         </Link>
@@ -70,7 +70,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeJobsCount })
             style={{ color: 'var(--text-muted, #666560)', fontSize: '0.88rem', fontWeight: 500, whiteSpace: 'nowrap' }}
             className="hover:text-[var(--text-main)] transition-colors flex items-center gap-1.5 no-underline whitespace-nowrap"
           >
-            <span>Open Roles</span>
+            <span>Partner Roles</span>
             {activeJobsCount !== undefined && activeJobsCount > 0 && (
               <span
                 style={{
@@ -89,25 +89,25 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeJobsCount })
             )}
           </a>
           <a
+            href="#process"
+            style={{ color: 'var(--text-muted, #666560)', fontSize: '0.88rem', fontWeight: 500, whiteSpace: 'nowrap' }}
+            className="hover:text-[var(--text-main)] transition-colors no-underline whitespace-nowrap"
+          >
+            How It Works
+          </a>
+          <a
             href="#evaluation-simulator"
             style={{ color: 'var(--text-muted, #666560)', fontSize: '0.88rem', fontWeight: 500, whiteSpace: 'nowrap' }}
             className="hover:text-[var(--text-main)] transition-colors no-underline whitespace-nowrap"
           >
-            Evaluation Engine
+            Evaluation Rubric
           </a>
           <a
-            href="#roi-calculator"
+            href="#culture"
             style={{ color: 'var(--text-muted, #666560)', fontSize: '0.88rem', fontWeight: 500, whiteSpace: 'nowrap' }}
             className="hover:text-[var(--text-main)] transition-colors no-underline whitespace-nowrap"
           >
-            Hiring ROI
-          </a>
-          <a
-            href="#capabilities"
-            style={{ color: 'var(--text-muted, #666560)', fontSize: '0.88rem', fontWeight: 500, whiteSpace: 'nowrap' }}
-            className="hover:text-[var(--text-main)] transition-colors no-underline whitespace-nowrap"
-          >
-            Capabilities
+            Why Choose Us
           </a>
           <a
             href="#faq"
@@ -121,7 +121,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeJobsCount })
         {/* 3. Header Action (Right) */}
         <div className="flex items-center justify-end gap-3 shrink-0">
           <Link
-            to="/admin/login"
+            to="/apply"
             style={{
               padding: '9px 22px',
               borderRadius: '8px',
@@ -138,8 +138,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeJobsCount })
             }}
             className="hover:opacity-90 transition-opacity whitespace-nowrap"
           >
-            <ShieldCheck className="w-4 h-4" />
-            <span>Recruiter Sign In</span>
+            <span>Apply Now</span>
           </Link>
 
           {/* Mobile Menu Toggle */}
@@ -168,7 +167,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeJobsCount })
               onClick={() => setMobileMenuOpen(false)}
               className="text-sm font-medium text-slate-800 hover:text-[var(--primary)] flex items-center justify-between"
             >
-              <span>Open Roles</span>
+              <span>Partner Roles</span>
               {activeJobsCount !== undefined && activeJobsCount > 0 && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold">
                   {activeJobsCount}
@@ -176,25 +175,25 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ activeJobsCount })
               )}
             </a>
             <a
+              href="#process"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-medium text-slate-800 hover:text-[var(--primary)]"
+            >
+              How It Works
+            </a>
+            <a
               href="#evaluation-simulator"
               onClick={() => setMobileMenuOpen(false)}
               className="text-sm font-medium text-slate-800 hover:text-[var(--primary)]"
             >
-              Evaluation Engine
+              Evaluation Rubric
             </a>
             <a
-              href="#roi-calculator"
+              href="#culture"
               onClick={() => setMobileMenuOpen(false)}
               className="text-sm font-medium text-slate-800 hover:text-[var(--primary)]"
             >
-              Hiring ROI Calculator
-            </a>
-            <a
-              href="#capabilities"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-medium text-slate-800 hover:text-[var(--primary)]"
-            >
-              Platform Capabilities
+              Why Choose Us
             </a>
             <a
               href="#faq"
